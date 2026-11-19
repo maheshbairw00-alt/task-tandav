@@ -344,7 +344,7 @@ function viewHome() {
 /* ---------- CAPTCHA ---------- */
 /* DEMO: जाँच और Coin क्रेडिट अभी फ़ोन में होता है। असली ऐप में जवाब की जाँच, 10/दिन की सीमा और Coins
    Cloud Functions से होंगे, ताकि कोई ब्राउज़र से छेड़छाड़ न कर सके। */
-const CAP_REWARD = 20;       // DEMO राशि: असली राशि Admin तय करेगा
+const CAP_REWARD = 5;       // DEMO राशि: असली राशि Admin तय करेगा
 const CAP_TTL = 120000;      // CAPTCHA 2 मिनट में एक्सपायर
 const CAP_UP = 'ABCDEFGHJKLMNPQRSTUVWXYZ', CAP_LO = 'abcdefghjkmnpqrstuvwxyz', CAP_NU = '23456789';
 const capUsed = new Set();
