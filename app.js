@@ -110,7 +110,12 @@ const go = (v) => { if (location.hash === '#' + v) route(); else location.hash =
 const MAX_CAPTCHA = 10;
 const EXPLORE = [['📝','Survey','c1'],['❓','Quiz','c2'],['🎁','Offerwall','c3'],['📖','Reading','c4'],['💭','Feedback','c5']];
 const OFFERS = ['App Install','Game','Shopping','Special','Premium'];
-
+function closeModal() {
+  const modal = document.getElementById('modal');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
+}
 /* ---------- Router ---------- */
 function route() {
   const u = api.currentUser();
