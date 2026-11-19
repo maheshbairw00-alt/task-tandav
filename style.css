@@ -190,12 +190,30 @@ input,select{font:inherit}
 .mcard b{font-size:14px;line-height:1.25}
 .mcard .bd{align-self:flex-start;margin-top:auto}
 .mico{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:22px;background:var(--lav)}
+
+.exrow{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow);color:var(--text)}
+.exrow:active{transform:scale(.98)}
+.exico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:var(--lav);flex:none}
+.exrow small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.exnote{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.5}
+.exnote i{flex:none;width:22px;height:22px;border-radius:50%;background:var(--lav);color:var(--lav-d);display:grid;place-items:center;font-size:11px;font-style:normal;font-weight:800;margin-top:2px}
+.exwhy{margin-top:10px;background:var(--mint);color:var(--text);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.5}
+.exwhy.bad{background:#ffe4e6}
+.extime{background:var(--amber);color:var(--amber-d);font-weight:800;font-size:13px;padding:6px 12px;border-radius:20px}
+.exsub{font-size:13px;font-weight:800;color:var(--muted);margin:14px 2px 8px}
+
 .prico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:var(--lav);flex:none}
 .exsub{font-size:13px;font-weight:800;color:var(--muted);margin:14px 2px 8px}
 .btn.soft.small{padding:10px 14px;font-size:13px}
+
 .rdc{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;text-align:center;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px}
 .rdc b{font-size:22px}
 .rdc small{color:var(--muted);font-size:11px}
 .rdc .rdn{font-size:12px;color:var(--muted)}
 .rdc .bar{margin:4px 0}
 .rdc.lock{opacity:.75}
+
+/* ---- Google लॉगिन बटन (style.css के सबसे नीचे जोड़ें) ---- */
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:var(--text);border:1.5px solid var(--line);box-shadow:var(--shadow);margin-top:6px}
+.gbtn .gmark{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,#4285f4,#ea4335 50%,#fbbc05)}
+.gbtn:disabled{opacity:.5}

@@ -110,21 +110,12 @@ const go = (v) => { if (location.hash === '#' + v) route(); else location.hash =
 const MAX_CAPTCHA = 10;
 const EXPLORE = [['📝','Survey','c1'],['❓','Quiz','c2'],['🎁','Offerwall','c3'],['📖','Reading','c4'],['💭','Feedback','c5']];
 const OFFERS = ['App Install','Game','Shopping','Special','Premium'];
-function closeModal() {
-  const modal = document.getElementById('modal');
-  if (modal) {
-    modal.classList.add('hidden');
-  }
-}
-function closeModal() {
-  const modal = document.getElementById('modal');
-  if (modal) modal.classList.add('hidden');
-}
+
 /* ---------- Router ---------- */
 function route() {
   const u = api.currentUser();
   let v = (location.hash || '').replace('#', '');
-      if (!['register', 'login', 'home', 'captcha', 'wallet', 'profile', 'community', 'tasks', 'quiz', 'reading', 'game', 'offers', 'mission', 'exam', 'promote', 'redeem'].includes(v)) v = '';
+  if (!['register', 'login', 'home', 'captcha', 'wallet', 'profile', 'community', 'tasks', 'quiz', 'reading', 'game', 'offers', 'mission', 'exam', 'promote', 'redeem'].includes(v)) v = '';
   if (!u && (v === 'home' || v === 'captcha' || v === 'wallet' || v === 'profile' || v === 'community' || v === 'tasks' || v === 'quiz' || v === 'reading' || v === 'game' || v === 'offers' || v === 'mission' || v === 'exam' || v === 'promote' || v === 'redeem')) v = '';
   if (u && (v === 'login' || v === 'register')) v = 'home';
   if (!v) v = u ? 'home' : (Object.keys(api.users()).length ? 'login' : 'register');
@@ -140,12 +131,12 @@ function route() {
   else if (v === 'quiz') viewQuiz();
   else if (v === 'reading') viewReading();
   else if (v === 'game') viewGame();
+  else if (v === 'offers') viewOffers();
   else if (v === 'mission') viewMission();
-else if (v === 'exam') viewExam();
- else if (v === 'promote') viewPromote();
-else if (v === 'redeem') viewRedeem();
- else if (v === 'redeem') viewRedeem();
- else viewHome();
+  else if (v === 'exam') viewExam();
+  else if (v === 'promote') viewPromote();
+  else if (v === 'redeem') viewRedeem();
+  else viewHome();
 }
 window.addEventListener('hashchange', route);
 
@@ -321,15 +312,17 @@ function viewHome() {
     <div class="card split"><div><b>🎯 आज का Mission</b><br><small>Verification के बाद ही Reward मिलेगा</small></div><button class="pill ghost" data-go="mission">खोलें</button></div>
   </div>
 
-<div class="sec"><div class="ad"><b>ADVERTISEMENT</b>बैनर विज्ञापन की जगह (Ad Network जुड़ने पर)</div></div>
+  ${exHomeHTML()}
+
+  <div class="sec"><div class="ad"><b>ADVERTISEMENT</b>बैनर विज्ञापन की जगह (Ad Network जुड़ने पर)</div></div>
 
   <div class="sec"><div class="card creator">
     <div style="font-size:30px">🎬</div>
     <div class="t"><b>Premium Creator बनें</b><small>Reels, Studio, Brand Campaigns और Creator Earnings</small></div>
     <button class="pill ghost" data-soon="Creator">देखें</button>
   </div></div>
-${moreEarnHTML()}
-${promoHomeHTML()}
+  ${moreEarnHTML()}
+  ${promoHomeHTML()}
   </div>
   ${navHTML('home')}`;
   bindNav();
@@ -351,7 +344,7 @@ ${promoHomeHTML()}
 /* ---------- CAPTCHA ---------- */
 /* DEMO: जाँच और Coin क्रेडिट अभी फ़ोन में होता है। असली ऐप में जवाब की जाँच, 10/दिन की सीमा और Coins
    Cloud Functions से होंगे, ताकि कोई ब्राउज़र से छेड़छाड़ न कर सके। */
-const CAP_REWARD = 20;        // DEMO राशि: असली राशि Admin तय करेगा
+const CAP_REWARD = 20;       // DEMO राशि: असली राशि Admin तय करेगा
 const CAP_TTL = 120000;      // CAPTCHA 2 मिनट में एक्सपायर
 const CAP_UP = 'ABCDEFGHJKLMNPQRSTUVWXYZ', CAP_LO = 'abcdefghjkmnpqrstuvwxyz', CAP_NU = '23456789';
 const capUsed = new Set();
@@ -623,7 +616,7 @@ const prfSheet = (html) => {
   $('modal').classList.remove('hidden'); $('closeSheet').onclick = closeModal;
 };
 const prfKV = (k, v) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`;
-const prfMobile = (m) => '+91 ' + m.slice(0, 2) + '****' + m.slice(-4);
+const prfMobile = (m) => /^\d{10}$/.test(m) ? '+91 ' + m.slice(0, 2) + '****' + m.slice(-4) : 'Google खाता';
 
 /* STEP A: Profile पेज */
 function viewProfile() {
