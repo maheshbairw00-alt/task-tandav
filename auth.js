@@ -103,7 +103,7 @@ function viewLogin() {
     <div class="card">
       <b>स्वागत है 👋</b>
       <div class="hint" style="margin:6px 0 14px">पासवर्ड या OTP की ज़रूरत नहीं। अपने Google खाते से एक टैप में लॉगिन करें।</div>
-      <label class="check"><input type="checkbox" id="gterms"><span>मैं <a class="link" href="#" id="gtl">Terms &amp; Conditions</a> और <a class="link" href="#" id="gpl">Privacy Policy</a> स्वीकार करता/करती हूँ।</span></label>
+      <label class="check"><input type="checkbox" id="gterms"><span>मैं <a class="link" href="terms.html" target="_blank" rel="noopener" id="gtl">Terms &amp; Conditions</a> और <a class="link" href="privacy.html" target="_blank" rel="noopener" id="gpl">Privacy Policy</a> स्वीकार करता/करती हूँ।</span></label>
       <div id="gbox"></div>
       <div class="hint" id="gwait" style="text-align:center;margin-top:8px">ऊपर Terms टिक करने पर Google का बटन दिखेगा।</div>
       <div class="err" id="gerr" style="margin-top:10px;text-align:center"></div>
@@ -112,8 +112,6 @@ function viewLogin() {
     <div class="demo-tag" style="margin-top:14px">अभी टेस्टिंग चरण: Coins और डेटा इसी फ़ोन में सेव हैं।</div>
   </div>`;
   $('gterms').onchange = () => { $('gwait').style.display = $('gterms').checked ? 'none' : ''; auDraw(); };
-  $('gtl').onclick = (e) => { e.preventDefault(); toast('Terms पेज जल्द जुड़ेगा'); };
-  $('gpl').onclick = (e) => { e.preventDefault(); toast('Privacy Policy पेज जल्द जुड़ेगा'); };
 }
 
 /* पहले से लॉगिन Firebase यूज़र का सेशन वापस जोड़ना */
