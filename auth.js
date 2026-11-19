@@ -26,7 +26,7 @@ api.googleLogin = function (g) {
       username: (em.split('@')[0] || 'user').replace(/[^A-Za-z0-9_]/g, '').slice(0, 20) || 'user',
       mobile: key, email: g.email || '', photo: g.photoURL || '', uid: g.uid, lang: 'Hindi', created: todayStr(),
       type: 'normal', coins: 0, earned: 0, withdrawn: 0, streak: 0, lastCheckin: null,
-      captchaDay: todayStr(), captchaCount: 0, ledger: [] };
+      captchaDay: todayStr(), captchaCount: 0, ledger: [], _new: true };
     this.saveUser(u);
   } else if (g.photoURL && u.photo !== g.photoURL) { u.photo = g.photoURL; this.saveUser(u); }
   LS.set('session', { mobile: key, at: Date.now() });
@@ -34,7 +34,11 @@ api.googleLogin = function (g) {
 };
 
 const auLogoutOld = api.logout.bind(api);
-api.logout = function () { auLogoutOld(); try { if (AU_OK) firebase.auth().signOut(); } catch (e) {} };
+api.logout = function () {
+  const u0 = api.currentUser(); auLogoutOld();
+  const p = (window.CL_FLUSH && u0) ? window.CL_FLUSH(u0) : Promise.resolve();
+  Promise.resolve(p).catch(() => {}).then(() => { try { if (AU_OK) firebase.auth().signOut(); } catch (e) {} });
+};
 
 const AU_CLIENT_ID = '176721442385-fc42uqei77dmkbnq9fnrqgs615tfbb5d.apps.googleusercontent.com';
 let AU_INIT = false;
@@ -115,6 +119,6 @@ function viewLogin() {
 /* पहले से लॉगिन Firebase यूज़र का सेशन वापस जोड़ना */
 if (AU_OK) {
   try {
-    firebase.auth().onAuthStateChanged((fu) => { if (fu && !api.session()) { api.googleLogin(fu); route(); } });
+    firebase.auth().onAuthStateChanged((fu) => { if (fu && !api.session()) { api.googleLogin(fu); const go2 = () => route(); if (document.readyState === 'complete') go2(); else window.addEventListener('load', go2); } });
   } catch (e) { console.warn(e); }
 }
