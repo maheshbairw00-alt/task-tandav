@@ -1,0 +1,140 @@
+<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Task Tandav Admin</title>
+<style>:root{--bg:#f4f6ff;--card:#fff;--blue:#6c8cff;--text:#1f2440;--muted:#6b7194;--line:#e4e8f7;--ok:#1fa37a;--bad:#e5484d;--warn:#b7791f}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--text)}
+.w{max-width:720px;margin:0 auto;padding:14px}h1{font-size:20px;margin:6px 0}.m{color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
+.tabs{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}.tabs button{flex:1;padding:10px;border:1px solid var(--line);background:#fff;border-radius:10px;font-weight:700;color:var(--muted)}
+.tabs button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn{border:0;border-radius:10px;padding:10px 12px;font-weight:700;color:#fff;background:var(--blue);font-size:14px;text-decoration:none;display:inline-block}
+.btn.ok{background:var(--ok)}.btn.bad{background:var(--bad)}.btn.soft{background:#e7edff;color:var(--blue)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.sp{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.tag{font-size:12px;padding:2px 8px;border-radius:20px;background:#eef;color:#445}.tag.w{background:#fff3d6;color:var(--warn)}
+.hide{display:none}.err{color:var(--bad);font-size:13px}input{padding:10px;border:1px solid var(--line);border-radius:10px;width:100%}
+code{background:#eef1ff;padding:1px 5px;border-radius:5px;word-break:break-all}</style></head><body><div class="w">
+<h1>🛡️ Task Tandav Admin</h1><div class="m" id="who">लॉगिन करें</div>
+<div id="login" class="card"><div class="m" style="margin-bottom:8px">सिर्फ़ Admin का Google खाता चलेगा।</div><div id="gbox"></div><div class="err" id="lerr"></div></div>
+<div id="app" class="hide">
+<div class="tabs"><button data-t="wd" class="on">💸 निकासी</button><button data-t="pr">📣 प्रमोशन</button><button data-t="us">👥 यूज़र</button></div>
+<div class="row"><button class="btn soft" id="reload">🔄 ताज़ा करें</button><button class="btn soft" id="out">बाहर निकलें</button></div>
+<div id="list"></div></div>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+/* ===== सेटिंग: Admin ईमेल (Rules में भी यही ईमेल होनी चाहिए) ===== */
+const ADMINS = ['maheshbairw00@gmail.com'];
+const CLIENT_ID = '176721442385-fc42uqei77dmkbnq9fnrqgs615tfbb5d.apps.googleusercontent.com';
+const PR_TIERS = [[10000, 150], [5000, 100], [1000, 50]], PR_MIN_VIEWS = 1000;
+const OPEN = ['Pending', 'Under Review', 'Approved', 'Processing'];
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uidn = (p) => p + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 1000);
+const fdt = (s) => { try { return new Date(s).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return s || ''; } };
+let db, tab = 'wd', rows = [];
+firebase.initializeApp(FB_CONFIG); db = firebase.firestore();
+const isAdmin = (u) => u && u.email && ADMINS.includes(u.email.toLowerCase());
+
+function gisInit() {
+  if (!(window.google && google.accounts && google.accounts.id)) return setTimeout(gisInit, 300);
+  google.accounts.id.initialize({ client_id: CLIENT_ID, callback: async (r) => {
+    try { const c = firebase.auth.GoogleAuthProvider.credential(r.credential); await firebase.auth().signInWithCredential(c); }
+    catch (e) { $('lerr').textContent = 'लॉगिन नहीं हुआ: ' + (e.code || e.message); } }, use_fedcm_for_button: true });
+  google.accounts.id.renderButton($('gbox'), { theme: 'outline', size: 'large', text: 'signin_with' });
+}
+gisInit();
+firebase.auth().onAuthStateChanged((u) => {
+  if (!u) { $('login').classList.remove('hide'); $('app').classList.add('hide'); $('who').textContent = 'लॉगिन करें'; return; }
+  if (!isAdmin(u)) { $('lerr').textContent = u.email + ' Admin नहीं है।'; firebase.auth().signOut(); return; }
+  $('who').textContent = 'Admin: ' + u.email; $('login').classList.add('hide'); $('app').classList.remove('hide'); load();
+});
+$('out').onclick = () => firebase.auth().signOut();
+$('reload').onclick = () => load();
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b)); paint(); });
+
+async function load() {
+  $('list').innerHTML = '<div class="m">लोड हो रहा है…</div>';
+  try {
+    const snap = await db.collection('users').get(); rows = [];
+    snap.forEach(d => { try { const x = d.data(); rows.push({ id: d.id, u: JSON.parse(x.data), ts: x.ts }); } catch (e) {} });
+    paint();
+  } catch (e) { $('list').innerHTML = '<div class="err">डेटा नहीं मिला: ' + esc(e.code || e.message) + '<br>Firestore Rules में Admin वाला हिस्सा लगा है?</div>'; }
+}
+function paint() {
+  if (tab === 'wd') return paintWd(); if (tab === 'pr') return paintPr(); paintUs();
+}
+function paintWd() {
+  const all = []; rows.forEach(r => (r.u.withdrawals || []).forEach(w => all.push({ r, w })));
+  const open = all.filter(x => OPEN.includes(x.w.status)).sort((a, b) => new Date(a.w.at) - new Date(b.w.at));
+  const done = all.filter(x => !OPEN.includes(x.w.status)).sort((a, b) => new Date(b.w.upd || b.w.at) - new Date(a.w.upd || a.w.at)).slice(0, 15);
+  const card = (x, act) => { const u = x.r.u, w = x.w, upi = (u.pay && u.pay.upi) || '', nm = (u.pay && u.pay.upiName) || '';
+    const link = upi ? 'upi://pay?pa=' + encodeURIComponent(upi) + '&pn=' + encodeURIComponent(nm || u.name || '') + '&am=' + w.amount + '&cu=INR&tn=' + encodeURIComponent('Task Tandav ' + w.id) : '';
+    return `<div class="card"><div class="sp"><b>₹${w.amount}</b><span class="tag">${esc(w.status)}</span></div>
+    <div class="m">${esc(u.name)} · ${esc(u.email || '')}</div>
+    <div>UPI: <code>${esc(upi)}</code> (${esc(nm)})</div>
+    <div class="m">Request: ${fdt(w.at)} · ID ${esc(w.id)}</div>
+    <div class="m">कुल कमाई ${u.earned || 0} · बचे Coins ${u.coins || 0} · पहले निकाले ₹${u.withdrawn || 0}</div>
+    ${act ? `<div class="row">${link ? `<a class="btn soft" href="${esc(link)}">📲 UPI ऐप खोलें</a>` : ''}
+    <button class="btn ok" data-a="paid" data-u="${x.r.id}" data-w="${esc(w.id)}">✅ भुगतान हो गया</button>
+    <button class="btn bad" data-a="rej" data-u="${x.r.id}" data-w="${esc(w.id)}">❌ नामंज़ूर</button></div>` : ''}</div>`; };
+  $('list').innerHTML = `<h3>खुली Requests (${open.length})</h3>` + (open.map(x => card(x, true)).join('') || '<div class="m">कोई Request नहीं।</div>') +
+    `<h3>हाल की पूरी हुई (${done.length})</h3>` + done.map(x => card(x, false)).join('');
+  document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => wdAct(b.dataset.a, b.dataset.u, b.dataset.w));
+}
+function paintPr() {
+  const all = []; rows.forEach(r => (r.u.promo || []).forEach(p => all.push({ r, p })));
+  const open = all.filter(x => x.p.status === 'pending').sort((a, b) => new Date(a.p.at) - new Date(b.p.at));
+  const tier = (v) => { for (const t of PR_TIERS) if (v >= t[0]) return t[1]; return 0; };
+  $('list').innerHTML = `<h3>जाँच बाकी (${open.length})</h3>` + (open.map(x => { const p = x.p, c = tier(p.views);
+    return `<div class="card"><div class="sp"><b>${esc(p.platform)} · ${p.views} Views</b><span class="tag">${c ? c + ' Coins' : 'कम Views'}</span></div>
+    <div class="m">${esc(x.r.u.name)} · ${esc(x.r.u.email || '')}</div><div><a href="${esc(p.link)}" target="_blank" rel="noopener">पोस्ट खोलें</a> · स्क्रीनशॉट: ${esc(p.shot)}</div>
+    <div class="m">${fdt(p.at)} · ID ${esc(p.id)}</div>
+    <div class="row"><button class="btn ok" data-pa="ok" data-u="${x.r.id}" data-p="${esc(p.id)}">✅ मंज़ूर</button><button class="btn bad" data-pa="no" data-u="${x.r.id}" data-p="${esc(p.id)}">❌ नामंज़ूर</button></div></div>`; }).join('') || '<div class="m">कोई पोस्ट नहीं।</div>');
+  document.querySelectorAll('[data-pa]').forEach(b => b.onclick = () => prAct(b.dataset.pa, b.dataset.u, b.dataset.p));
+}
+function paintUs() {
+  const list = rows.slice().sort((a, b) => (b.u.earned || 0) - (a.u.earned || 0));
+  $('list').innerHTML = `<div class="m">कुल यूज़र: ${list.length}</div>` + list.map(r => { const u = r.u, led = u.ledger || [];
+    const sum = led.reduce((a, t) => a + (Number(t.coins) || 0), 0), bad = led.length < 290 && sum !== (u.coins || 0);
+    return `<div class="card"><div class="sp"><b>${esc(u.name)}</b>${bad ? '<span class="tag w">⚠ हिसाब नहीं मिलता</span>' : ''}</div>
+    <div class="m">${esc(u.email || '')} · जुड़े: ${esc(u.created || '')}</div>
+    <div>कमाई ${u.earned || 0} · Coins ${u.coins || 0} · निकाले ₹${u.withdrawn || 0} · निकासी ${(u.withdrawals || []).length}</div>
+    ${bad ? `<div class="m">लेजर का जोड़ ${sum}, पर Coins ${u.coins || 0}। हो सकता है छेड़छाड़ हुई हो, निकासी से पहले जाँचें।</div>` : ''}</div>`; }).join('');
+}
+async function change(uid, fn) {
+  const ref = db.collection('users').doc(uid);
+  await db.runTransaction(async (t) => {
+    const s = await t.get(ref); if (!s.exists) throw new Error('यूज़र नहीं मिला');
+    const u = JSON.parse(s.data().data); fn(u); if (!u.ledger) u.ledger = [];
+    u._ts = Date.now();
+    t.set(ref, { data: JSON.stringify(u), ts: u._ts, name: String(u.name || ''), email: String(u.email || ''), coins: Number(u.coins) || 0, earned: Number(u.earned) || 0 });
+  });
+}
+async function wdAct(a, uid, wid) {
+  const msg = a === 'paid' ? 'पक्का? इसे "भुगतान हो गया" मार्क करें (पैसा UPI से भेज चुके हों)।' : 'पक्का? नामंज़ूर करने पर Coins यूज़र को लौट जाएँगे।';
+  if (!confirm(msg)) return;
+  try {
+    await change(uid, (u) => {
+      const w = (u.withdrawals || []).find(x => x.id === wid); if (!w || !OPEN.includes(w.status)) throw new Error('Request पहले ही बदल चुकी है');
+      const now = new Date().toISOString(); w.upd = now; w.log = w.log || [];
+      if (a === 'paid') { w.status = 'Completed'; u.withdrawn = (u.withdrawn || 0) + w.amount; }
+      else { w.status = 'Rejected'; u.coins = (u.coins || 0) + w.coins; u.ledger.unshift({ id: uidn('TXN'), type: 'Withdrawal Refund', coins: w.coins, at: now, ref: w.id }); }
+      w.log.push({ s: w.status, at: now });
+    });
+    await load();
+  } catch (e) { alert('नहीं हुआ: ' + (e.message || e.code)); }
+}
+async function prAct(a, uid, pid) {
+  if (!confirm(a === 'ok' ? 'मंज़ूर करें? Coins यूज़र को मिल जाएँगे।' : 'नामंज़ूर करें?')) return;
+  try {
+    await change(uid, (u) => {
+      const p = (u.promo || []).find(x => x.id === pid); if (!p || p.status !== 'pending') throw new Error('यह पहले ही बदल चुका है');
+      let c = 0; for (const t of PR_TIERS) if (p.views >= t[0]) { c = t[1]; break; }
+      if (a === 'ok' && c) { const tx = uidn('TXN'), now = new Date().toISOString(); p.status = 'approved'; p.coins = c; p.tx = tx; p.note = ''; u.coins = (u.coins || 0) + c; u.earned = (u.earned || 0) + c; u.ledger.unshift({ id: tx, type: 'App Promote', coins: c, at: now, ref: p.id }); }
+      else { p.status = 'rejected'; p.note = a === 'ok' ? PR_MIN_VIEWS + ' से कम Views' : 'Admin ने नामंज़ूर किया'; }
+    });
+    await load();
+  } catch (e) { alert('नहीं हुआ: ' + (e.message || e.code)); }
+}
+</script></div></body></html>

@@ -4,6 +4,7 @@
    असली ऐप में पोस्ट/स्क्रीनशॉट सर्वर पर जाएँगे, Admin Panel से मंज़ूरी होगी और Coins सर्वर देगा।
    Coins की सीढ़ी, सीमा और वीडियो की सूची नीचे के PR_ वाले हिस्से में बदली जा सकती है। */
 const PR_TIERS = [[10000, 150], [5000, 100], [1000, 50]];   // [कम से कम Views, Coins] बड़ी से छोटी
+const PR_DEMO_SELF = false;     // true करने पर यूज़र खुद पोस्ट मंज़ूर कर सकता है (सिर्फ़ टेस्टिंग)। असली में false, मंज़ूरी Admin पैनल से
 const PR_MIN_VIEWS = 1000;     // इससे कम Views पर कोई Coins नहीं
 const PR_DAY_MAX = 3;          // एक User रोज़ कितने पोस्ट जमा कर सकता है
 const PR_PLATFORMS = ['Instagram', 'WhatsApp Status', 'Facebook'];
@@ -38,7 +39,7 @@ function viewPromote() {
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><a class="btn soft small" href="${esc(v.url)}" download>⬇ डाउनलोड</a><button class="btn soft small" data-prcap="${i}">📋 कैप्शन</button><button class="btn soft small" data-prshare="${i}">📤 शेयर</button></div></div>`).join('');
   const hist = u.promo.length ? u.promo.map(p => {
     const st = p.status === 'approved' ? ['', 'मंज़ूर · +' + p.coins + ' Coins'] : p.status === 'rejected' ? ['rj', 'नामंज़ूर'] : ['pn', 'जाँच में'];
-    return `<div class="qa"><div class="split"><b>${esc(p.platform)} · ${prFmt(p.views)} Views</b><span class="bd ${st[0]}">${esc(st[1])}</span></div><small>${esc(p.link)}</small>${p.note ? `<small>${esc(p.note)}</small>` : ''}${p.status === 'pending' ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="btn soft small" data-prok="${p.id}">डेमो: Admin मंज़ूर</button></div>` : ''}</div>`;
+    return `<div class="qa"><div class="split"><b>${esc(p.platform)} · ${prFmt(p.views)} Views</b><span class="bd ${st[0]}">${esc(st[1])}</span></div><small>${esc(p.link)}</small>${p.note ? `<small>${esc(p.note)}</small>` : ''}${p.status === 'pending' && PR_DEMO_SELF ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="btn soft small" data-prok="${p.id}">डेमो: Admin मंज़ूर</button></div>` : ''}</div>`;
   }).join('') : '<div class="hint">अभी कोई पोस्ट जमा नहीं हुआ।</div>';
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>App Promote</b></div><span style="width:40px"></span></div>

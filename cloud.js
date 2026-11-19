@@ -76,3 +76,16 @@ async function clSync(fu) {
 if (CL_OK && firebase.apps.length) {
   try { firebase.auth().onAuthStateChanged((fu) => { if (fu) clSync(fu); else CL_READY = false; }); } catch (e) { console.warn(e); }
 }
+
+/* ऐप में वापस आने पर: Admin ने कुछ बदला हो (जैसे भुगतान हो गया) तो नया डेटा ले आना */
+async function clRefresh() {
+  try {
+    const fu = firebase.auth().currentUser; if (!CL_OK || !fu || !CL_READY || CL_DIRTY || CL_BUSY && CL_TIMER) return;
+    const snap = await clDb().collection('users').doc(fu.uid).get(); if (!snap.exists) return;
+    const all = api.users(), key = clKey(fu.uid), local = all[key], d = snap.data();
+    if (local && d.data && (d.ts || 0) > (local._ts || 0) && !CL_DIRTY) {
+      const cu = JSON.parse(d.data); cu.mobile = key; cu.uid = fu.uid; cu._ts = d.ts; all[key] = cu; LS.set('users', all); route();
+    }
+  } catch (e) { console.warn('refresh', e); }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') clRefresh(); });
