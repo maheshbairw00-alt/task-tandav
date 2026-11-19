@@ -403,40 +403,6 @@ function viewOffers() {
   if ($('soRemove')) $('soRemove').onclick = () => soRemove(act.id);
   document.querySelectorAll('[data-so]').forEach(b => b.onclick = () => soDoStep(act.id, b.dataset.k, b.dataset.so === 'approve'));
 }
-College Booster — बदलाव (4 छोटी जगहें, कुल 5 स्टेप)
-========================================================
-
-STEP 1 — नई फ़ाइलें बनाएँ (उसी Earnpro फ़ोल्डर में, index.html के साथ)
-  exam-data.js, ch-samvidhan.js, ch-bhugol.js, ch-computer.js, ch-reasoning.js
-  (हर फ़ाइल का पूरा कोड उसी नाम की फ़ाइल से कॉपी करें)
-
-STEP 2 — index.html: <script src="app.js"></script> वाली लाइन के ठीक ऊपर ये 5 लाइनें जोड़ें
-  <script src="exam-data.js"></script>
-  <script src="ch-samvidhan.js"></script>
-  <script src="ch-bhugol.js"></script>
-  <script src="ch-computer.js"></script>
-  <script src="ch-reasoning.js"></script>
-
-STEP 3 — style.css: सबसे नीचे style-add3.css का पूरा कोड चिपकाएँ
-
-STEP 4 — app2.js: exam-add.js का पूरा कोड चिपकाएँ
-  जगह: जिस लाइन की शुरुआत ही  function openCal() {  से होती है, उसके ठीक ऊपर (खाली लाइन पर)।
-  ध्यान: Search करने पर यह वाक्य एक कमेंट (/* ... */) में भी मिलेगा। वह नहीं, वह लाइन चुनें
-  जो कमेंट में नहीं है और सीधे "function openCal() {" से शुरू होती है।
-  (अगर ग़लती से नीचे चिपकाया तो ऐप सफ़ेद हो जाएगा। तब कोड काटकर सही जगह चिपका दें।)
-
-STEP 5 — app.js: 4 बदलाव
-  (क) 'mission'].includes(v)   को बदलकर   'mission', 'exam'].includes(v)   करें
-  (ख) || v === 'mission')) v = '';   को बदलकर   || v === 'mission' || v === 'exam')) v = '';   करें
-  (ग) इस लाइन के ठीक नीचे:   else if (v === 'mission') viewMission();
-      नई लाइन जोड़ें:         else if (v === 'exam') viewExam();
-  (घ) Home में, इस लाइन के ठीक ऊपर:
-        <div class="sec"><div class="ad"><b>ADVERTISEMENT</b>बैनर विज्ञापन की जगह (Ad Network जुड़ने पर)</div></div>
-      यह नई लाइन जोड़ें (नीचे-ऊपर एक खाली लाइन रखें):
-        ${exHomeHTML()}
-
-बाद में नया अध्याय जोड़ना: मैं नई ch-xxxx.js फ़ाइल दूँगा। उसे बनाकर index.html में
-exam-data.js के नीचे उसकी एक <script> लाइन जोड़ें। बस।
 
 /* >>> इस पूरे कोड को app2.js में 'function openCal() {' वाली लाइन के ठीक ऊपर चिपकाएँ (सबसे नीचे नहीं) <<< */
 /* ---------- DAILY MISSION: YouTube + Telegram बॉट (DEMO) ---------- */
