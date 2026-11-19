@@ -116,6 +116,10 @@ function closeModal() {
     modal.classList.add('hidden');
   }
 }
+function closeModal() {
+  const modal = document.getElementById('modal');
+  if (modal) modal.classList.add('hidden');
+}
 /* ---------- Router ---------- */
 function route() {
   const u = api.currentUser();
