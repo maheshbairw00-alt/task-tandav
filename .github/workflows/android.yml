@@ -25,9 +25,10 @@ jobs:
             "appId": "com.tasktandav.app",
             "appName": "Task Tandav",
             "webDir": "www",
-                     "plugins": {
+            "plugins": {
               "FirebaseAuthentication": {
                 "skipNativeAuth": true,
+                "useCredentialManager": false,
                 "providers": ["google.com"]
               }
             },
@@ -51,3 +52,8 @@ jobs:
         with:
           name: TaskTandav-debug-apk
           path: cap/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Show APK signing key
+        run: |
+          keytool -printcert -jarfile cap/android/app/build/outputs/apk/debug/app-debug.apk | grep -E "SHA1|SHA-1"
+          npm ls @capacitor-firebase/authentication --prefix cap
+          grep -rn "default_web_client_id" cap/android/app/build/generated/res/google-services/debug/values/values.xml || true
