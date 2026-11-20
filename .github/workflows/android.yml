@@ -18,7 +18,7 @@ jobs:
           mkdir -p cap/www && cd cap
           echo '<!doctype html><title>Task Tandav</title><p>Loading...</p>' > www/index.html
           npm init -y
-          npm i @capacitor/core@7 @capacitor/android@7 @capacitor-community/admob@7
+          npm i @capacitor/core@7 @capacitor/android@7 @capacitor-community/admob@7 @capacitor-firebase/authentication@7 firebase@11
           npm i -D @capacitor/cli@7
           cat > capacitor.config.json <<'CFG'
           {
@@ -33,6 +33,8 @@ jobs:
           }
           CFG
           npx cap add android
+          mkdir -p ~/.android && cp ../tt-debug.keystore ~/.android/debug.keystore
+          if [ -f ../google-services.json ]; then cp ../google-services.json android/app/google-services.json; echo GS-OK; else echo GS-MISSING; fi
           npx cap sync android
           sed -i 's#</application>#    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-7586210928508782~7997282110"/>\n    </application>#' android/app/src/main/AndroidManifest.xml
           grep -n "APPLICATION_ID" android/app/src/main/AndroidManifest.xml
