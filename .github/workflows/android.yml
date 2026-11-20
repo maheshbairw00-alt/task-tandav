@@ -43,6 +43,8 @@ jobs:
           mkdir -p ~/.android && cp ../tt-debug.keystore ~/.android/debug.keystore
           if [ -f ../google-services.json ]; then cp ../google-services.json android/app/google-services.json; echo GS-OK; else echo GS-MISSING; fi
           npx cap sync android
+          sed -i "s#^android {#android {\n    signingConfigs {\n        debug {\n            storeFile file('$GITHUB_WORKSPACE/tt-debug.keystore')\n            storePassword 'android'\n            keyAlias 'androiddebugkey'\n            keyPassword 'android'\n        }\n    }#" android/app/build.gradle
+          grep -n -A8 "^android {" android/app/build.gradle | head -14
           sed -i 's#</application>#    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-7586210928508782~7997282110"/>\n    </application>#' android/app/src/main/AndroidManifest.xml
           grep -n "APPLICATION_ID" android/app/src/main/AndroidManifest.xml
       - name: Build debug APK
@@ -54,6 +56,7 @@ jobs:
           path: cap/android/app/build/outputs/apk/debug/app-debug.apk
       - name: Show APK signing key
         run: |
-          keytool -printcert -jarfile cap/android/app/build/outputs/apk/debug/app-debug.apk | grep -E "SHA1|SHA-1"
+          keytool -printcert -jarfile cap/android/app/build/outputs/apk/debug/app-debug.apk | grep -E "SHA1|SHA-1" | tee sha.txt
+          grep -q "C4:21:DD:20" sha.txt && echo SHA-MATCH || echo SHA-MISMATCH
           npm ls @capacitor-firebase/authentication --prefix cap
           grep -rn "default_web_client_id" cap/android/app/build/generated/res/google-services/debug/values/values.xml || true
