@@ -27,7 +27,11 @@ function clPayload(u) {
 
 async function clPush(u) {
   if (!CL_OK || !CL_READY || !u || !u.uid || u.mobile !== clKey(u.uid)) return;
-  try { await clDb().collection('users').doc(u.uid).set(clPayload(u)); CL_DIRTY = false; }
+  try {
+    const ref = clDb().collection('users').doc(u.uid);
+    try { const cs = await ref.get(); if (cs.exists && cs.data().data) { const cd = JSON.parse(cs.data().data); if (cd.blocked && !u.blocked) { u.blocked = true; u.blockReason = cd.blockReason || ''; } } } catch (e) {}
+    await ref.set(clPayload(u)); CL_DIRTY = false;
+  }
   catch (e) { CL_DIRTY = true; clWarn(e); clearTimeout(CL_TIMER); CL_TIMER = setTimeout(clSchedule, 20000); }
 }
 
@@ -89,3 +93,32 @@ async function clRefresh() {
   } catch (e) { console.warn('refresh', e); }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') clRefresh(); });
+
+/* ---- Admin के संदेश, Maintenance और ब्लॉक की जाँच (चरण 2-10) ---- */
+function clOverlay(id, html) {
+  let o = document.getElementById(id);
+  if (!o) { o = document.createElement('div'); o.id = id; o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(255,255,255,.97);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:inherit;color:#17233D'; document.body.appendChild(o); }
+  o.innerHTML = html;
+}
+async function clNotice() {
+  try {
+    const fu = firebase.auth().currentUser; if (!CL_OK || !fu) return;
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const cs = await clDb().collection('appSettings').doc('main').get();
+    const old = document.getElementById('clMaint');
+    if (cs.exists && cs.data().maintenance) { clOverlay('clMaint', '<div><div style="font-size:42px">🛠️</div><h2>अभी Maintenance चल रहा है</h2><p>' + esc(cs.data().msg) + '</p></div>'); return; }
+    if (old) old.remove();
+    const u = api.users()[clKey(fu.uid)];
+    if (u && u.blocked) { clOverlay('clBlock', '<div><div style="font-size:42px">🚫</div><h2>आपका खाता ब्लॉक है</h2><p>' + esc(u.blockReason || '') + '</p><p>मदद के लिए Admin से संपर्क करें।</p><button id="clBO" style="padding:12px 20px;border:0;border-radius:12px;background:#4269E8;color:#fff;font-weight:700">Logout</button></div>'); document.getElementById('clBO').onclick = () => { document.getElementById('clBlock').remove(); api.logout(); }; return; }
+    const ob = document.getElementById('clBlock'); if (ob) ob.remove();
+    const ns = await clDb().collection('notifications').orderBy('at', 'desc').limit(1).get();
+    ns.forEach((d) => {
+      const n = d.data(), seen = localStorage.getItem('tt_seen_note');
+      if (seen === d.id) return;
+      clOverlay('clNote', '<div style="background:#fff;border:1px solid #E5EAF3;border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.12);max-width:340px"><div style="font-size:34px">🔔</div><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p><button id="clNO" style="padding:11px 20px;border:0;border-radius:12px;background:#4269E8;color:#fff;font-weight:700">ठीक है</button></div>');
+      document.getElementById('clNO').onclick = () => { try { localStorage.setItem('tt_seen_note', d.id); } catch (e) {} document.getElementById('clNote').remove(); };
+    });
+  } catch (e) { console.warn('notice', e); }
+}
+if (CL_OK && firebase.apps.length) { try { firebase.auth().onAuthStateChanged((fu) => { if (fu) setTimeout(clNotice, 2500); }); } catch (e) {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(clNotice, 1500); });
