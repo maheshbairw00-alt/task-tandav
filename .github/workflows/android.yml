@@ -25,6 +25,12 @@ jobs:
             "appId": "com.tasktandav.app",
             "appName": "Task Tandav",
             "webDir": "www",
+                     "plugins": {
+              "FirebaseAuthentication": {
+                "skipNativeAuth": true,
+                "providers": ["google.com"]
+              }
+            },
             "server": {
               "url": "https://maheshbairw00-alt.github.io/task-tandav/",
               "cleartext": false,
