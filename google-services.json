@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "176721442385",
+    "project_id": "task-tandav",
+    "storage_bucket": "task-tandav.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176721442385:android:a1a609eca1a789b97cea70",
+        "android_client_info": {
+          "package_name": "com.tasktandav.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "176721442385-2ep15puff6tbhtu148a18k5ibgl83om3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tasktandav.app",
+            "certificate_hash": "c421dd20a906bad73e39c712109db9fb4db2dce9"
+          }
+        },
+        {
+          "client_id": "176721442385-fc42uqei77dmkbnq9fnrqgs615tfbb5d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCC1PqXyo110aBfR6S_0c_kQ6xB97lFNnI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "176721442385-fc42uqei77dmkbnq9fnrqgs615tfbb5d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
