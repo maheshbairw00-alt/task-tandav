@@ -313,18 +313,27 @@ function gmResult() {
   $('gmAgain').onclick = () => { gmPlay = null; viewGame(); };
   if ($('gmAd')) $('gmAd').onclick = gmWatchAd;
 }
+function gmCredit(g) {
+  const u = diaUser(), gm = u.games.find(x => x.id === g.id);
+  if (gm && !gm.credited) { gm.credited = true; diaAdd(u, 1, 'Game Reward', g.id); api.saveUser(u); g.credited = true; toast('+1 💎 मिला'); }
+  if (gmPlay === g) gmResult();
+}
 function gmWatchAd() {
-  const g = gmPlay; let left = AD_SEC;
+  const g = gmPlay;
+  /* Android ऐप में असली (अभी टेस्ट) Rewarded Ad; वेब पर पुराना डेमो */
+  if (window.TTAds && window.TTAds.available()) {
+    const btn = $('gmAd'); if (btn) { btn.disabled = true; btn.textContent = 'Ad लोड हो रहा है…'; }
+    window.TTAds.showRewarded().then((ok) => {
+      if (ok) gmCredit(g); else { toast('Ad पूरा नहीं हुआ, 💎 नहीं मिला'); if (btn) { btn.disabled = false; btn.textContent = '▶ Watch Ad'; } }
+    });
+    return;
+  }
+  let left = AD_SEC;
   $('sheet').innerHTML = `<h3>Ad (डेमो)</h3><div class="sub">असली Ad नेटवर्क जुड़ने पर यहाँ Ad चलेगा।</div><div class="card" style="text-align:center"><div style="font-size:40px">📺</div><b id="adLeft">${left} सेकंड</b></div><div class="hint">Ad पूरा होने तक रुकें।</div>`;
   $('modal').classList.remove('hidden');
   const t = setInterval(() => {
     left--; if ($('adLeft')) $('adLeft').textContent = left + ' सेकंड';
-    if (left <= 0) {
-      clearInterval(t); closeModal();
-      const u = diaUser(), gm = u.games.find(x => x.id === g.id);
-      if (gm && !gm.credited) { gm.credited = true; diaAdd(u, 1, 'Game Reward', g.id); api.saveUser(u); g.credited = true; toast('+1 💎 मिला'); }
-      if (gmPlay === g) gmResult();
-    }
+    if (left <= 0) { clearInterval(t); closeModal(); gmCredit(g); }
   }, 1000);
 }
 
