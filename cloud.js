@@ -122,3 +122,48 @@ async function clNotice() {
 }
 if (CL_OK && firebase.apps.length) { try { firebase.auth().onAuthStateChanged((fu) => { if (fu) setTimeout(clNotice, 2500); }); } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(clNotice, 1500); });
+
+/* ---- Admin पैनल से Tasks (Quiz/Reading) जोड़ना, बंद करना ---- */
+async function clTasks() {
+  try {
+    if (typeof QUIZZES === 'undefined' || typeof ARTICLES === 'undefined' || !CL_OK) return;
+    const fu = firebase.auth().currentUser; if (!fu) return;
+    if (!window.__QZ0) { window.__QZ0 = QUIZZES.slice(); window.__AR0 = ARTICLES.slice(); }
+    const d = await clDb().collection('appSettings').doc('tasks').get();
+    let items = [], dis = [];
+    if (d.exists) { try { items = JSON.parse(d.data().items || '[]'); } catch (e) {} dis = d.data().disabled || []; }
+    const okQ = (q) => q && typeof q.q === 'string' && Array.isArray(q.o) && q.o.length === 4 && q.a >= 0 && q.a < 4;
+    const qz = window.__QZ0.filter((x) => !dis.includes(x.id)), ar = window.__AR0.filter((x) => !dis.includes(x.id));
+    items.forEach((i) => {
+      if (!i || !i.active || !i.id || !i.title || !Array.isArray(i.qs) || !i.qs.length || !i.qs.every(okQ)) return;
+      const r = Math.max(1, Math.min(20, Number(i.reward) || 1));
+      if (i.kind === 'quiz' && i.qs.length === 5) qz.push({ id: i.id, title: i.title, type: i.type || 'General Knowledge', reward: r, qs: i.qs });
+      if (i.kind === 'read' && Array.isArray(i.text) && i.text.length) ar.push({ id: i.id, title: i.title, reward: r, text: i.text, qs: i.qs });
+    });
+    const sig = (a) => a.map((x) => x.id).join(',');
+    const changed = sig(qz) !== sig(QUIZZES) || sig(ar) !== sig(ARTICLES);
+    if (!changed) return;
+    QUIZZES.length = 0; qz.forEach((x) => QUIZZES.push(x)); ARTICLES.length = 0; ar.forEach((x) => ARTICLES.push(x));
+    if (!(typeof qzPlay !== 'undefined' && qzPlay) && !(typeof rdPlay !== 'undefined' && rdPlay)) route();
+  } catch (e) { console.warn('tasks', e); }
+}
+
+/* ---- Referral Code (वैकल्पिक, सिर्फ़ एक बार पूछना) ---- */
+function clRef() {
+  try {
+    const fu = firebase.auth().currentUser; if (!CL_OK || !fu) return;
+    const u = api.users()[clKey(fu.uid)]; if (!u || u.refAsked || u.referredBy) return;
+    if (document.getElementById('clBlock') || document.getElementById('clMaint') || document.getElementById('clNote')) return;
+    clOverlay('clRef', '<div style="background:#fff;border:1px solid #E5EAF3;border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.12);max-width:340px;width:100%"><div style="font-size:34px">🤝</div><h3>Referral Code है?</h3><p style="font-size:14px;color:#7B8497">किसी दोस्त ने बुलाया हो तो उसका Code डालें। नहीं है तो Skip करें।</p><input id="clRI" maxlength="12" placeholder="जैसे TTAB12CD" style="width:100%;padding:12px;border:1px solid #E5EAF3;border-radius:12px;font-size:16px;text-transform:uppercase"><div id="clRE" style="color:#DC2626;font-size:13px;min-height:18px;margin:6px 0"></div><button id="clRS" style="padding:11px 18px;border:0;border-radius:12px;background:#4269E8;color:#fff;font-weight:700">Save</button> <button id="clRK" style="padding:11px 18px;border:0;border-radius:12px;background:#EDF2FF;color:#4269E8;font-weight:700">Skip</button></div>');
+    const done = (code) => { const cu = api.users()[clKey(fu.uid)]; if (cu) { cu.refAsked = true; if (code) cu.referredBy = code; api.saveUser(cu); } document.getElementById('clRef').remove(); };
+    document.getElementById('clRK').onclick = () => done('');
+    document.getElementById('clRS').onclick = () => {
+      const c = document.getElementById('clRI').value.trim().toUpperCase();
+      if (!/^TT[A-Z0-9]{6}$/.test(c)) { document.getElementById('clRE').textContent = 'Code TT से शुरू होकर 8 अक्षर का होता है।'; return; }
+      if (c === u.refCode) { document.getElementById('clRE').textContent = 'अपना ही Code नहीं डाल सकते।'; return; }
+      done(c);
+    };
+  } catch (e) { console.warn('ref', e); }
+}
+if (CL_OK && firebase.apps.length) { try { firebase.auth().onAuthStateChanged((fu) => { if (fu) { setTimeout(clTasks, 3000); setTimeout(clRef, 4500); } }); } catch (e) {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(clTasks, 2000); });

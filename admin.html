@@ -55,7 +55,7 @@ const uidn = (p) => p + Date.now().toString(36).toUpperCase() + Math.floor(Math.
 const fdt = (s) => { try { return new Date(s).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return s || ''; } };
 const today = () => new Date().toISOString().slice(0, 10);
 const inr = (n) => '₹' + (Math.round(n * 100) / 100).toLocaleString('en-IN');
-let db, rows = [], logs = [], notes = [], cfg = {}, me = null, wdFilter = 'open', prFilter = 'pending', userQ = '', userF = 'all', rFrom = '', rTo = '';
+let db, rows = [], logs = [], notes = [], cfg = {}, tcfg = { items: [], disabled: [] }, me = null, wdFilter = 'open', prFilter = 'pending', userQ = '', userF = 'all', rFrom = '', rTo = '';
 firebase.initializeApp(FB_CONFIG); db = firebase.firestore();
 const isAdmin = (u) => u && u.email && ADMINS.includes(u.email.toLowerCase());
 
@@ -84,6 +84,7 @@ async function load() {
   logs = [];
   try { const s = await db.collection('adminLogs').orderBy('at', 'desc').limit(200).get(); s.forEach(d => logs.push(d.data())); } catch (e) { /* Rules में adminLogs अभी न हो तो छोड़ दो */ }
   notes = []; try { const s = await db.collection('notifications').orderBy('at', 'desc').limit(30).get(); s.forEach(d => notes.push(Object.assign({ _id: d.id }, d.data()))); } catch (e) {}
+  tcfg = { items: [], disabled: [] }; try { const d = await db.collection('appSettings').doc('tasks').get(); if (d.exists) { tcfg.items = JSON.parse(d.data().items || '[]'); tcfg.disabled = d.data().disabled || []; } } catch (e) {}
   cfg = {}; try { const d = await db.collection('appSettings').doc('main').get(); if (d.exists) cfg = d.data(); } catch (e) {}
   paint();
 }
@@ -190,8 +191,56 @@ function pTasks() {
   $('view').innerHTML = `<div class="card"><b>📋 यूज़र की Tasks</b><div class="m" style="margin-top:4px">कुल ${tasks.length}${Object.keys(cnt).map(s => ' · ' + esc(s) + ' ' + cnt[s]).join('')}</div></div>
   <div class="card"><div class="sp"><b>📣 प्रमोशन जमा</b><span class="tag warn">${pr.filter(x => x.p.status === 'pending').length} जाँच बाकी</span></div><div class="m">मंज़ूर ${pr.filter(x => x.p.status === 'approved').length} · नामंज़ूर ${pr.filter(x => x.p.status === 'rejected').length}</div><div class="row"><a class="btn" href="#more/promo">जाँचें</a></div></div>
   <h2>हाल की Tasks</h2>` + (tasks.slice(0, 40).map(x => `<div class="card"><div class="sp"><b>${esc(x.k.title || x.k.name || x.k.id || 'Task')}</b><span class="tag">${esc(x.k.status || '-')}</span></div><div class="m">${esc(x.r.u.name)}</div></div>`).join('') || '<div class="card m">अभी कोई Task रिकॉर्ड नहीं।</div>') +
-  `<div class="card lock"><b>नया Task बनाना / बदलना / Archive</b><div class="m">Tasks का कंटेंट अभी ऐप के कोड में है, इसलिए पैनल से बदलने पर ऐप में असर नहीं होगा। इसके लिए पहले ऐप को Firestore से Tasks पढ़ने लायक बनाना होगा। तब तक बटन नहीं दिया गया।</div></div>`;
+  ``;
+  tkCtl();
 }
+
+/* ---- Tasks नियंत्रण: Quiz / Reading जोड़ना, बदलना, Archive, चालू-बंद ---- */
+const BUILTIN = [['qz_gk1', 'भारत सामान्य ज्ञान', 'Quiz'], ['qz_sci1', 'विज्ञान की बुनियादी बातें', 'Quiz'], ['qz_edu1', 'गणित और हिंदी', 'Quiz'], ['rd_scam', 'ऑनलाइन ठगी से बचने के नियम', 'Reading'], ['rd_budget', 'बजट बनाने की आदतें', 'Reading'], ['rd_focus', 'पढ़ाई में ध्यान', 'Reading']];
+function tkCtl() {
+  const box = document.createElement('div');
+  box.innerHTML = `<h2>🛠️ Task नियंत्रण (ऐप के Quiz / Reading)</h2><div class="row" style="margin:0 0 8px"><button class="btn" id="tkNew">➕ नया Task</button></div>
+  <div class="m">ऐप खुलने पर बदलाव अपने-आप पहुँचते हैं।</div>
+  ${tcfg.items.map(i => `<div class="card"><div class="sp"><b>${esc(i.title)}</b><span class="tag ${i.active ? 'ok' : 'warn'}">${i.active ? 'चालू' : 'Archive'}</span></div><div class="m">${i.kind === 'quiz' ? 'Quiz' : 'Reading'} · ${i.reward} Coins · ${i.qs.length} सवाल</div>
+  <div class="row"><button class="btn soft sm" data-te="${esc(i.id)}">✏️ बदलें</button><button class="btn ${i.active ? 'bad' : 'ok'} sm" data-tt="${esc(i.id)}">${i.active ? '📦 Archive' : '✅ चालू करें'}</button></div></div>`).join('')}
+  <div class="card"><b>ऐप में पहले से मौजूद</b>${BUILTIN.map(b => { const off = tcfg.disabled.includes(b[0]); return `<div class="sp" style="margin-top:8px"><span>${esc(b[1])} <span class="m">· ${b[2]}</span></span><button class="btn ${off ? 'ok' : 'bad'} sm" data-tb="${b[0]}">${off ? 'चालू करें' : 'बंद करें'}</button></div>`; }).join('')}</div>`;
+  $('view').insertBefore(box, $('view').firstChild);
+  $('tkNew').onclick = () => tkForm(null);
+  document.querySelectorAll('[data-te]').forEach(b => b.onclick = () => tkForm(tcfg.items.find(i => i.id === b.dataset.te)));
+  document.querySelectorAll('[data-tt]').forEach(b => b.onclick = () => { const i = tcfg.items.find(x => x.id === b.dataset.tt); i.active = !i.active; tkSave(i.active ? 'Task चालू' : 'Task Archive', i.title); });
+  document.querySelectorAll('[data-tb]').forEach(b => b.onclick = () => { const d = tcfg.disabled, k = b.dataset.tb, n = d.indexOf(k); if (n >= 0) d.splice(n, 1); else d.push(k); tkSave(n >= 0 ? 'Built-in Task चालू' : 'Built-in Task बंद', k); });
+}
+async function tkSave(action, target) {
+  try { await db.collection('appSettings').doc('tasks').set({ items: JSON.stringify(tcfg.items), disabled: tcfg.disabled, at: new Date().toISOString(), admin: me.email }); await logA(action, target, ''); await load(); }
+  catch (e) { alert('नहीं हुआ: ' + (e.code || e.message) + '\nRules अपडेट किए?'); await load(); }
+}
+function tkForm(it) {
+  const e = it || { kind: 'quiz', type: 'General Knowledge', reward: 5, title: '', text: [], qs: [], active: true };
+  const qs = e.qs.map(q => [q.q].concat(q.o, [q.a + 1]).join(' | ')).join('\n');
+  $('sheetBody').innerHTML = `<h3 style="margin-top:0">${it ? 'Task बदलें' : 'नया Task'}</h3>
+  <div class="m">प्रकार</div><div class="chips"><button class="chip ${e.kind === 'quiz' ? 'on' : ''}" id="kq">Quiz (5 सवाल)</button><button class="chip ${e.kind === 'read' ? 'on' : ''}" id="kr">Reading</button></div>
+  <input type="text" id="tTitle" placeholder="शीर्षक" value="${esc(e.title)}" style="margin-bottom:8px"><input type="text" id="tRew" placeholder="Reward Coins (1 से 20)" value="${e.reward}" inputmode="numeric" style="margin-bottom:8px">
+  <div id="tReadBox" class="${e.kind === 'read' ? '' : 'hide'}"><div class="m">लेख: हर पैराग्राफ़ के बीच एक खाली लाइन छोड़ें (कम से कम 2 पैराग्राफ़)</div><textarea id="tText" rows="6" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:12px;font:inherit">${esc((e.text || []).join('\n\n'))}</textarea></div>
+  <div class="m" style="margin-top:8px">सवाल: हर लाइन में एक सवाल, ऐसे:<br><code>सवाल | विकल्प1 | विकल्प2 | विकल्प3 | विकल्प4 | सही नंबर (1-4)</code><br><span id="tQn"></span></div>
+  <textarea id="tQs" rows="8" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:12px;font:inherit">${esc(qs)}</textarea>
+  <div class="err" id="tErr"></div><div class="row"><button class="btn" id="tOk">सेव करें</button><button class="btn soft" id="tNo">रद्द</button></div>`;
+  $('sheet').classList.remove('hide'); let kind = e.kind;
+  const sk = (k) => { kind = k; $('kq').classList.toggle('on', k === 'quiz'); $('kr').classList.toggle('on', k === 'read'); $('tReadBox').classList.toggle('hide', k !== 'read'); $('tQn').textContent = k === 'quiz' ? 'Quiz में ठीक 5 सवाल चाहिए।' : 'Reading में 1 से 3 सवाल।'; };
+  sk(kind); $('kq').onclick = () => sk('quiz'); $('kr').onclick = () => sk('read'); $('tNo').onclick = () => $('sheet').classList.add('hide');
+  $('tOk').onclick = () => {
+    const er = (m) => { $('tErr').textContent = m; }, title = $('tTitle').value.trim(), rew = parseInt($('tRew').value, 10);
+    if (title.length < 3) return er('शीर्षक लिखें।'); if (!(rew >= 1 && rew <= 20)) return er('Reward 1 से 20 के बीच हो।');
+    const out = []; const lines = $('tQs').value.split('\n').map(x => x.trim()).filter(Boolean);
+    for (let n = 0; n < lines.length; n++) { const p = lines[n].split('|').map(x => x.trim()); const a = parseInt(p[5], 10);
+      if (p.length !== 6 || p.slice(0, 5).some(x => !x) || !(a >= 1 && a <= 4)) return er('लाइन ' + (n + 1) + ' का रूप गलत है। (सवाल | 4 विकल्प | सही नंबर 1-4)'); out.push({ q: p[0], o: p.slice(1, 5), a: a - 1 }); }
+    if (kind === 'quiz' && out.length !== 5) return er('Quiz में ठीक 5 सवाल चाहिए (अभी ' + out.length + ')।'); if (kind === 'read' && (out.length < 1 || out.length > 3)) return er('Reading में 1 से 3 सवाल चाहिए।');
+    let text = []; if (kind === 'read') { text = $('tText').value.split(/\n\s*\n/).map(x => x.trim()).filter(Boolean); if (text.length < 2 || text.some(x => x.length < 20)) return er('कम से कम 2 पैराग्राफ़ (हर एक 20+ अक्षर) चाहिए।'); }
+    const item = { id: it ? it.id : 'cx_' + Date.now().toString(36), kind, title: title.slice(0, 80), type: 'General Knowledge', reward: rew, active: it ? it.active : true, qs: out }; if (kind === 'read') item.text = text;
+    if (it) tcfg.items[tcfg.items.findIndex(x => x.id === it.id)] = item; else tcfg.items.unshift(item);
+    $('sheet').classList.add('hide'); tkSave(it ? 'Task बदला' : 'नया Task', title);
+  };
+}
+
 
 /* ---------- WITHDRAW ---------- */
 const WL = { Pending: 'Pending', 'Under Review': 'Under Review', Approved: 'Approved', Processing: 'Payment Processing', Completed: 'Paid', Rejected: 'Rejected', Cancelled: 'Cancelled', Failed: 'Failed' };
@@ -249,7 +298,7 @@ function pCoins() {
   const rk = Object.keys(ref).sort((a, b) => ref[b] - ref[a]);
   const codes = rows.filter(r => r.u.refCode).length;
   $('view').innerHTML = back + `<h2>🏆 Leaderboard (कुल कमाई)</h2><div class="card">${top.map((r, i) => `<div class="act"><i>${i + 1}</i><div><a href="#users/${esc(r.id)}">${esc(r.u.name)}</a><div class="m">कमाई ${r.u.earned || 0} · बचे ${r.u.coins || 0}</div></div></div>`).join('') || '<div class="m">कोई यूज़र नहीं।</div>'}</div>
-  <h2>🤝 Referral हिसाब</h2><div class="card">${rk.map(k => { const owner = rows.find(r => r.u.refCode === k); return `<div class="act"><i>${ref[k]}</i><div><b>${esc(k)}</b>${owner ? ' · ' + esc(owner.u.name) : ''}<div class="m">${ref[k]} यूज़र जुड़े</div></div></div>`; }).join('') || `<div class="m">अभी किसी यूज़र में "किसने बुलाया" दर्ज नहीं है। (Referral Code ${codes} यूज़र के पास है, पर ऐप में Code भरने का खाना अभी नहीं जोड़ा गया, इसलिए गिनती शून्य है।)</div>`}</div>
+  <h2>🤝 Referral हिसाब</h2><div class="card">${rk.map(k => { const owner = rows.find(r => r.u.refCode === k); return `<div class="act"><i>${ref[k]}</i><div><b>${esc(k)}</b>${owner ? ' · ' + esc(owner.u.name) : ' · <span class="tag bad">अमान्य Code</span>'}<div class="m">${ref[k]} यूज़र जुड़े</div></div></div>`; }).join('') || `<div class="m">अभी किसी यूज़र में "किसने बुलाया" दर्ज नहीं है। (Referral Code ${codes} यूज़र के पास है, पर ऐप में Code भरने का खाना अभी नहीं जोड़ा गया, इसलिए गिनती शून्य है।)</div>`}</div>
   <h2>📐 मौजूदा दरें (ऐप के कोड में तय, यहाँ सिर्फ़ दिखाई गई)</h2><div class="card"><div>${COINS_PER_RS} Coins = ₹1</div><div class="m">प्रमोशन: ${PR_TIERS.slice().reverse().map(t => t[0] + '+ Views → ' + t[1] + ' Coins').join(' · ')}</div><div class="m">दरें बदलने के लिए ऐप का कोड बदलना होगा। पैनल से बदलने का बटन नहीं दिया।</div></div>`;
 }
 function pNotif() {
