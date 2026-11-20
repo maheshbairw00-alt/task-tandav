@@ -1,22 +1,43 @@
-<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Task Tandav Admin</title>
-<style>:root{--bg:#f4f6ff;--card:#fff;--blue:#6c8cff;--text:#1f2440;--muted:#6b7194;--line:#e4e8f7;--ok:#1fa37a;--bad:#e5484d;--warn:#b7791f}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--text)}
-.w{max-width:720px;margin:0 auto;padding:14px}h1{font-size:20px;margin:6px 0}.m{color:var(--muted);font-size:13px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
-.tabs{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}.tabs button{flex:1;padding:10px;border:1px solid var(--line);background:#fff;border-radius:10px;font-weight:700;color:var(--muted)}
-.tabs button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn{border:0;border-radius:10px;padding:10px 12px;font-weight:700;color:#fff;background:var(--blue);font-size:14px;text-decoration:none;display:inline-block}
-.btn.ok{background:var(--ok)}.btn.bad{background:var(--bad)}.btn.soft{background:#e7edff;color:var(--blue)}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.sp{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
-.tag{font-size:12px;padding:2px 8px;border-radius:20px;background:#eef;color:#445}.tag.w{background:#fff3d6;color:var(--warn)}
-.hide{display:none}.err{color:var(--bad);font-size:13px}input{padding:10px;border:1px solid var(--line);border-radius:10px;width:100%}
-code{background:#eef1ff;padding:1px 5px;border-radius:5px;word-break:break-all}</style></head><body><div class="w">
-<h1>🛡️ Task Tandav Admin</h1><div class="m" id="who">लॉगिन करें</div>
-<div id="login" class="card"><div class="m" style="margin-bottom:8px">सिर्फ़ Admin का Google खाता चलेगा।</div><div id="gbox"></div><div class="err" id="lerr"></div></div>
-<div id="app" class="hide">
-<div class="tabs"><button data-t="wd" class="on">💸 निकासी</button><button data-t="pr">📣 प्रमोशन</button><button data-t="us">👥 यूज़र</button></div>
-<div class="row"><button class="btn soft" id="reload">🔄 ताज़ा करें</button><button class="btn soft" id="out">बाहर निकलें</button></div>
-<div id="list"></div></div>
+<!doctype html><html lang="hi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Task Tandav Admin</title>
+<style>
+:root{--bg:#F5F7FC;--card:#fff;--blue:#4269E8;--blue2:#EDF2FF;--text:#17233D;--mute:#7B8497;--line:#E5EAF3;--ok:#16A34A;--warn:#F59E0B;--bad:#DC2626;--sh:0 4px 16px rgba(66,105,232,.08)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--text);padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+.top{position:sticky;top:0;z-index:5;background:rgba(245,247,252,.92);backdrop-filter:blur(8px);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.top h1{font-size:18px;margin:0}.top small{color:var(--mute);display:block;font-size:12px}
+.w{max-width:720px;margin:0 auto;padding:14px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0;box-shadow:var(--sh)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:var(--sh)}
+.stat b{display:block;font-size:22px;margin-top:2px}.stat span{font-size:12px;color:var(--mute)}
+h2{font-size:15px;margin:18px 0 6px}.m{color:var(--mute);font-size:13px}
+.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:700;color:#fff;background:var(--blue);font-size:14px;text-decoration:none;display:inline-block;min-height:44px}
+.btn.ok{background:var(--ok)}.btn.bad{background:var(--bad)}.btn.soft{background:var(--blue2);color:var(--blue)}.btn.sm{min-height:36px;padding:8px 12px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.sp{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.tag{font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--blue2);color:var(--blue);white-space:nowrap}
+.tag.ok{background:#DCFCE7;color:var(--ok)}.tag.warn{background:#FEF3C7;color:#B45309}.tag.bad{background:#FEE2E2;color:var(--bad)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px}.chip{flex:none;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--mute);font-weight:700;font-size:13px}.chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+input[type=search],input[type=text]{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:15px;background:#fff}
+code{background:var(--blue2);padding:1px 6px;border-radius:6px;word-break:break-all;font-size:13px}
+.act{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}.act:last-child{border:0}.act i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--blue2);display:grid;place-items:center;flex:none}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:9;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(23,35,61,.06)}
+.nav a{flex:1;text-align:center;text-decoration:none;color:var(--mute);font-size:11px;font-weight:700;padding:6px 0;border-radius:12px}.nav a svg{display:block;margin:0 auto 2px;width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav a.on{color:var(--blue)}.nav a .b{position:relative}.nav a .dot{position:absolute;top:-4px;right:calc(50% - 20px);background:var(--bad);color:#fff;border-radius:10px;font-size:10px;padding:0 5px;min-width:16px}
+.hide{display:none!important}.err{color:var(--bad);font-size:13px}.lock{opacity:.55}
+.sheet{position:fixed;inset:0;background:rgba(23,35,61,.45);z-index:20;display:flex;align-items:flex-end}.sheet>div{background:#fff;width:100%;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto}
+</style></head><body>
+<div class="top"><div><h1>🛡️ Task Tandav Admin</h1><small id="who">लॉगिन करें</small></div><button class="btn soft sm hide" id="reload">🔄</button></div>
+<div class="w">
+<div id="login" class="card"><div class="m" style="margin-bottom:10px">सिर्फ़ Admin का Google खाता चलेगा।</div><div id="gbox"></div><div class="err" id="lerr"></div></div>
+<div id="view"></div></div>
+<nav class="nav hide" id="nav">
+<a href="#home" data-t="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>HOME</a>
+<a href="#users" data-t="users"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><path d="M17 4.5a3.5 3.5 0 0 1 0 7M22 20c0-2.6-1.7-4.6-4.5-5.5"/></svg>USERS</a>
+<a href="#tasks" data-t="tasks"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>TASKS</a>
+<a href="#withdraw" data-t="withdraw"><span class="b"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M6 15h4"/></svg><span class="dot hide" id="wdot"></span></span>WITHDRAW</a>
+<a href="#more" data-t="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>MORE</a></nav>
+<div id="sheet" class="sheet hide"><div id="sheetBody"></div></div>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -26,102 +47,180 @@ code{background:#eef1ff;padding:1px 5px;border-radius:5px;word-break:break-all}<
 /* ===== सेटिंग: Admin ईमेल (Rules में भी यही ईमेल होनी चाहिए) ===== */
 const ADMINS = ['maheshbairw00@gmail.com'];
 const CLIENT_ID = '176721442385-fc42uqei77dmkbnq9fnrqgs615tfbb5d.apps.googleusercontent.com';
-const PR_TIERS = [[10000, 150], [5000, 100], [1000, 50]], PR_MIN_VIEWS = 1000;
+const PR_TIERS = [[10000, 150], [5000, 100], [1000, 50]], PR_MIN_VIEWS = 1000, COINS_PER_RS = 100;
 const OPEN = ['Pending', 'Under Review', 'Approved', 'Processing'];
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const uidn = (p) => p + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 1000);
 const fdt = (s) => { try { return new Date(s).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return s || ''; } };
-let db, tab = 'wd', rows = [];
+const today = () => new Date().toISOString().slice(0, 10);
+const inr = (n) => '₹' + (Math.round(n * 100) / 100).toLocaleString('en-IN');
+let db, rows = [], logs = [], me = null, wdFilter = 'open', userQ = '', userF = 'all';
 firebase.initializeApp(FB_CONFIG); db = firebase.firestore();
 const isAdmin = (u) => u && u.email && ADMINS.includes(u.email.toLowerCase());
 
 function gisInit() {
   if (!(window.google && google.accounts && google.accounts.id)) return setTimeout(gisInit, 300);
   google.accounts.id.initialize({ client_id: CLIENT_ID, callback: async (r) => {
-    try { const c = firebase.auth.GoogleAuthProvider.credential(r.credential); await firebase.auth().signInWithCredential(c); }
+    try { await firebase.auth().signInWithCredential(firebase.auth.GoogleAuthProvider.credential(r.credential)); }
     catch (e) { $('lerr').textContent = 'लॉगिन नहीं हुआ: ' + (e.code || e.message); } }, use_fedcm_for_button: true });
   google.accounts.id.renderButton($('gbox'), { theme: 'outline', size: 'large', text: 'signin_with' });
 }
 gisInit();
 firebase.auth().onAuthStateChanged((u) => {
-  if (!u) { $('login').classList.remove('hide'); $('app').classList.add('hide'); $('who').textContent = 'लॉगिन करें'; return; }
+  if (!u) { me = null; $('login').classList.remove('hide'); $('nav').classList.add('hide'); $('reload').classList.add('hide'); $('view').innerHTML = ''; $('who').textContent = 'लॉगिन करें'; return; }
   if (!isAdmin(u)) { $('lerr').textContent = u.email + ' Admin नहीं है।'; firebase.auth().signOut(); return; }
-  $('who').textContent = 'Admin: ' + u.email; $('login').classList.add('hide'); $('app').classList.remove('hide'); load();
+  me = u; $('who').textContent = u.email; $('login').classList.add('hide'); $('nav').classList.remove('hide'); $('reload').classList.remove('hide'); load();
 });
-$('out').onclick = () => firebase.auth().signOut();
 $('reload').onclick = () => load();
-document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b)); paint(); });
+window.addEventListener('hashchange', paint);
 
 async function load() {
-  $('list').innerHTML = '<div class="m">लोड हो रहा है…</div>';
+  $('view').innerHTML = '<div class="m" style="padding:20px">लोड हो रहा है…</div>';
   try {
     const snap = await db.collection('users').get(); rows = [];
     snap.forEach(d => { try { const x = d.data(); rows.push({ id: d.id, u: JSON.parse(x.data), ts: x.ts }); } catch (e) {} });
-    paint();
-  } catch (e) { $('list').innerHTML = '<div class="err">डेटा नहीं मिला: ' + esc(e.code || e.message) + '<br>Firestore Rules में Admin वाला हिस्सा लगा है?</div>'; }
+  } catch (e) { $('view').innerHTML = '<div class="card err">डेटा नहीं मिला: ' + esc(e.code || e.message) + '<br>Firestore Rules में Admin वाला हिस्सा लगा है?</div>'; return; }
+  logs = [];
+  try { const s = await db.collection('adminLogs').orderBy('at', 'desc').limit(30).get(); s.forEach(d => logs.push(d.data())); } catch (e) { /* Rules में adminLogs अभी न हो तो छोड़ दो */ }
+  paint();
 }
+const tabNow = () => (location.hash || '#home').slice(1).split('/')[0];
 function paint() {
-  if (tab === 'wd') return paintWd(); if (tab === 'pr') return paintPr(); paintUs();
+  if (!me) return; const t = tabNow();
+  document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('on', a.dataset.t === t));
+  const openN = allWd().filter(x => OPEN.includes(x.w.status)).length; $('wdot').textContent = openN; $('wdot').classList.toggle('hide', !openN);
+  ({ home: pHome, users: pUsers, tasks: pTasks, withdraw: pWd, more: pMore }[t] || pHome)(); window.scrollTo(0, 0);
 }
-function paintWd() {
-  const all = []; rows.forEach(r => (r.u.withdrawals || []).forEach(w => all.push({ r, w })));
-  const open = all.filter(x => OPEN.includes(x.w.status)).sort((a, b) => new Date(a.w.at) - new Date(b.w.at));
-  const done = all.filter(x => !OPEN.includes(x.w.status)).sort((a, b) => new Date(b.w.upd || b.w.at) - new Date(a.w.upd || a.w.at)).slice(0, 15);
-  const card = (x, act) => { const u = x.r.u, w = x.w, upi = (u.pay && u.pay.upi) || '', nm = (u.pay && u.pay.upiName) || '';
-    const link = upi ? 'upi://pay?pa=' + encodeURIComponent(upi) + '&pn=' + encodeURIComponent(nm || u.name || '') + '&am=' + w.amount + '&cu=INR&tn=' + encodeURIComponent('Task Tandav ' + w.id) : '';
-    return `<div class="card"><div class="sp"><b>₹${w.amount}</b><span class="tag">${esc(w.status)}</span></div>
-    <div class="m">${esc(u.name)} · ${esc(u.email || '')}</div>
-    <div>UPI: <code>${esc(upi)}</code> (${esc(nm)})</div>
-    <div class="m">Request: ${fdt(w.at)} · ID ${esc(w.id)}</div>
-    <div class="m">कुल कमाई ${u.earned || 0} · बचे Coins ${u.coins || 0} · पहले निकाले ₹${u.withdrawn || 0}</div>
-    ${act ? `<div class="row">${link ? `<a class="btn soft" href="${esc(link)}">📲 UPI ऐप खोलें</a>` : ''}
-    <button class="btn ok" data-a="paid" data-u="${x.r.id}" data-w="${esc(w.id)}">✅ भुगतान हो गया</button>
-    <button class="btn bad" data-a="rej" data-u="${x.r.id}" data-w="${esc(w.id)}">❌ नामंज़ूर</button></div>` : ''}</div>`; };
-  $('list').innerHTML = `<h3>खुली Requests (${open.length})</h3>` + (open.map(x => card(x, true)).join('') || '<div class="m">कोई Request नहीं।</div>') +
-    `<h3>हाल की पूरी हुई (${done.length})</h3>` + done.map(x => card(x, false)).join('');
+const allWd = () => { const a = []; rows.forEach(r => (r.u.withdrawals || []).forEach(w => a.push({ r, w }))); return a; };
+const allPr = () => { const a = []; rows.forEach(r => (r.u.promo || []).forEach(p => a.push({ r, p }))); return a; };
+
+/* ---------- HOME ---------- */
+function pHome() {
+  const now = Date.now(), t0 = today(), wd = allWd();
+  const users = rows.length, active = rows.filter(r => now - (r.ts || 0) < 7 * 864e5).length, fresh = rows.filter(r => r.u.created === t0).length, blocked = rows.filter(r => r.u.blocked).length;
+  const issued = rows.reduce((a, r) => a + (r.u.earned || 0), 0);
+  let todayC = 0; rows.forEach(r => (r.u.ledger || []).forEach(l => { if (l.coins > 0 && String(l.at).slice(0, 10) === t0) todayC += l.coins; }));
+  const by = (s) => wd.filter(x => x.w.status === s), paid = by('Completed').reduce((a, x) => a + x.w.amount, 0);
+  const tasks = []; rows.forEach(r => (r.u.tasks || []).forEach(k => tasks.push(k)));
+  const pendPr = allPr().filter(x => x.p.status === 'pending').length;
+  const ev = [];
+  rows.forEach(r => { ev.push({ at: r.u.created, i: '👤', t: 'नया यूज़र: ' + r.u.name });
+    (r.u.ledger || []).slice(0, 5).forEach(l => ev.push({ at: l.at, i: l.coins > 0 ? '🪙' : '↘️', t: r.u.name + ' · ' + l.type + ' (' + (l.coins > 0 ? '+' : '') + l.coins + ')' }));
+    (r.u.withdrawals || []).forEach(w => ev.push({ at: w.at, i: '💸', t: r.u.name + ' · निकासी ₹' + w.amount + ' (' + w.status + ')' })); });
+  logs.forEach(l => ev.push({ at: l.at, i: '🛡️', t: 'Admin: ' + l.action + (l.target ? ' · ' + l.target : '') }));
+  ev.sort((a, b) => new Date(b.at) - new Date(a.at));
+  $('view').innerHTML = `<h2 style="margin-top:4px">👥 यूज़र</h2><div class="grid">
+  <div class="stat"><span>कुल रजिस्टर्ड</span><b>${users}</b></div><div class="stat"><span>सक्रिय (7 दिन)</span><b>${active}</b></div>
+  <div class="stat"><span>आज के नए</span><b>${fresh}</b></div><div class="stat"><span>ब्लॉक</span><b>${blocked}</b></div></div>
+  <h2>💸 निकासी</h2><div class="grid">
+  <div class="stat"><span>खुली Requests</span><b>${wd.filter(x => OPEN.includes(x.w.status)).length}</b></div><div class="stat"><span>कुल भुगतान</span><b>${inr(paid)}</b></div>
+  <div class="stat"><span>पूरी (Paid)</span><b>${by('Completed').length}</b></div><div class="stat"><span>नामंज़ूर</span><b>${by('Rejected').length}</b></div></div>
+  <h2>🪙 इनाम (Coins)</h2><div class="grid">
+  <div class="stat"><span>कुल जारी Coins</span><b>${issued.toLocaleString('en-IN')}</b></div><div class="stat"><span>आज जारी</span><b>${todayC.toLocaleString('en-IN')}</b></div></div>
+  <h2>🧾 आर्थिक सार</h2><div class="card"><div class="sp"><span>इनाम की लागत (Coins ÷ ${COINS_PER_RS})</span><b>${inr(issued / COINS_PER_RS)}</b></div>
+  <div class="sp" style="margin-top:6px"><span>भुगतान हुई निकासी</span><b>${inr(paid)}</b></div>
+  <div class="sp" style="margin-top:6px"><span>असली विज्ञापन कमाई</span><b class="m">दर्ज नहीं</b></div>
+  <div class="m" style="margin-top:8px">असली कमाई तब दिखेगी जब ad network जुड़ेगा। अभी कोई अनुमानित या डेमो आँकड़ा नहीं दिखाया जाता।</div></div>
+  <h2>📋 Tasks</h2><div class="grid"><div class="stat"><span>यूज़र की Tasks (कुल)</span><b>${tasks.length}</b></div><div class="stat"><span>प्रमोशन जाँच बाकी</span><b>${pendPr}</b></div></div>
+  <h2>⚡ त्वरित काम</h2><div class="row"><a class="btn" href="#withdraw">💸 निकासी देखें</a><a class="btn soft" href="#more/promo">📣 प्रमोशन जाँचें</a><a class="btn soft" href="#users">👥 यूज़र</a></div>
+  <h2>🕘 हाल की गतिविधि</h2><div class="card">${ev.slice(0, 15).map(e => `<div class="act"><i>${e.i}</i><div>${esc(e.t)}<div class="m">${fdt(e.at)}</div></div></div>`).join('') || '<div class="m">अभी कोई गतिविधि नहीं।</div>'}</div>`;
+}
+
+/* ---------- USERS ---------- */
+function pUsers() {
+  const q = userQ.toLowerCase();
+  let list = rows.slice().sort((a, b) => (b.u.earned || 0) - (a.u.earned || 0)).filter(r => !q || [r.u.name, r.u.email, r.u.id, r.id].some(x => String(x || '').toLowerCase().includes(q)));
+  if (userF === 'blocked') list = list.filter(r => r.u.blocked);
+  $('view').innerHTML = `<input type="search" id="uq" placeholder="नाम, ईमेल या User ID से खोजें" value="${esc(userQ)}">
+  <div class="chips"><button class="chip ${userF === 'all' ? 'on' : ''}" data-f="all">सभी</button><button class="chip ${userF === 'blocked' ? 'on' : ''}" data-f="blocked">ब्लॉक</button></div>
+  <div class="m">${list.length} यूज़र</div>` + list.map(r => { const u = r.u, led = u.ledger || [], sum = led.reduce((a, t) => a + (Number(t.coins) || 0), 0), bad = led.length < 290 && sum !== (u.coins || 0);
+    return `<div class="card"><div class="sp"><b>${esc(u.name)}</b><span>${u.blocked ? '<span class="tag bad">ब्लॉक</span> ' : ''}${bad ? '<span class="tag warn">⚠ हिसाब नहीं मिलता</span>' : ''}</span></div>
+    <div class="m">${esc(u.email || '')} · ID ${esc(u.id || '')} · जुड़े ${esc(u.created || '')}</div>
+    <div style="margin-top:6px">कमाई <b>${u.earned || 0}</b> · Coins <b>${u.coins || 0}</b> · निकाले <b>${inr(u.withdrawn || 0)}</b> · निकासी ${(u.withdrawals || []).length}</div>
+    ${bad ? `<div class="m">लेजर का जोड़ ${sum}, पर Coins ${u.coins || 0}। निकासी से पहले जाँचें।</div>` : ''}</div>`; }).join('');
+  $('uq').oninput = (e) => { userQ = e.target.value; const p = e.target.selectionStart; pUsers(); const n = $('uq'); n.focus(); n.setSelectionRange(p, p); };
+  document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { userF = b.dataset.f; pUsers(); });
+}
+
+/* ---------- TASKS (अभी: सिर्फ़ देखना) ---------- */
+function pTasks() {
+  const tasks = []; rows.forEach(r => (r.u.tasks || []).forEach(k => tasks.push({ r, k })));
+  const cnt = {}; tasks.forEach(x => { cnt[x.k.status] = (cnt[x.k.status] || 0) + 1; });
+  const pr = allPr().filter(x => x.p.status === 'pending').length;
+  $('view').innerHTML = `<div class="card"><b>Tasks का हिसाब (यूज़र के)</b><div class="m" style="margin-top:4px">कुल ${tasks.length}${Object.keys(cnt).map(s => ' · ' + esc(s) + ' ' + cnt[s]).join('')}</div></div>
+  <div class="card"><div class="sp"><b>📣 प्रमोशन जमा (जाँच बाकी)</b><span class="tag warn">${pr}</span></div><div class="row"><a class="btn" href="#more/promo">जाँचें</a></div></div>
+  <div class="card lock"><b>नया Task बनाना / बदलना</b><div class="m">Task, Quiz और Offer का कंटेंट अभी ऐप के कोड में है। इन्हें पैनल से बदलने के लिए कंटेंट Firestore में ले जाना होगा। यह चरण 4 में आएगा। तब तक कोई बटन नहीं दिखाया गया।</div></div>`;
+}
+
+/* ---------- WITHDRAW ---------- */
+function pWd() {
+  const f = { open: x => OPEN.includes(x.w.status), paid: x => x.w.status === 'Completed', rej: x => ['Rejected', 'Failed', 'Cancelled'].includes(x.w.status), all: () => true }[wdFilter];
+  const list = allWd().filter(f).sort((a, b) => wdFilter === 'open' ? new Date(a.w.at) - new Date(b.w.at) : new Date(b.w.upd || b.w.at) - new Date(a.w.upd || a.w.at));
+  const names = { open: 'खुली', paid: 'Paid', rej: 'नामंज़ूर', all: 'सभी' };
+  $('view').innerHTML = `<div class="chips">${Object.keys(names).map(k => `<button class="chip ${wdFilter === k ? 'on' : ''}" data-wf="${k}">${names[k]}</button>`).join('')}</div>
+  <div class="m">${list.length} Request</div>` + (list.map(x => { const u = x.r.u, w = x.w, upi = (u.pay && u.pay.upi) || '', nm = (u.pay && u.pay.upiName) || '', open = OPEN.includes(w.status);
+    const link = upi ? 'upi://pay?pa=' + encodeURIComponent(upi) + '&pn=' + encodeURIComponent(nm || u.name || '') + '&am=' + w.amount + '&cu=INR&tn=' + encodeURIComponent('TaskTandav ' + w.id) : '';
+    return `<div class="card"><div class="sp"><b style="font-size:20px">₹${w.amount}</b><span class="tag ${w.status === 'Completed' ? 'ok' : open ? 'warn' : 'bad'}">${esc(w.status)}</span></div>
+    <div style="margin-top:4px">${esc(u.name)} <span class="m">· ${esc(u.email || '')}</span></div>
+    <div>UPI: <code>${esc(upi)}</code> ${nm ? '(' + esc(nm) + ')' : ''}</div>
+    <div class="m">Request ${fdt(w.at)} · ID ${esc(w.id)}${w.payRef ? ' · Ref ' + esc(w.payRef) : ''}${w.reason ? ' · कारण: ' + esc(w.reason) : ''}</div>
+    <div class="m">कुल कमाई ${u.earned || 0} · बचे Coins ${u.coins || 0} · पहले निकाले ${inr(u.withdrawn || 0)}</div>
+    ${open ? `<div class="row">${link ? `<a class="btn soft" href="${esc(link)}">📲 UPI ऐप खोलें</a>` : ''}
+    <button class="btn ok" data-a="paid" data-u="${x.r.id}" data-w="${esc(w.id)}">✅ Paid</button><button class="btn bad" data-a="rej" data-u="${x.r.id}" data-w="${esc(w.id)}">❌ नामंज़ूर</button></div>` : ''}</div>`; }).join('') || '<div class="card m">कोई Request नहीं।</div>');
+  document.querySelectorAll('[data-wf]').forEach(b => b.onclick = () => { wdFilter = b.dataset.wf; pWd(); });
   document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => wdAct(b.dataset.a, b.dataset.u, b.dataset.w));
 }
-function paintPr() {
-  const all = []; rows.forEach(r => (r.u.promo || []).forEach(p => all.push({ r, p })));
-  const open = all.filter(x => x.p.status === 'pending').sort((a, b) => new Date(a.p.at) - new Date(b.p.at));
+
+/* ---------- MORE ---------- */
+function pMore() {
+  const sub = (location.hash.split('/')[1] || '');
+  if (sub === 'promo') return pPromo();
+  if (sub === 'logs') return pLogs();
+  const item = (ic, t, d, href) => href ? `<a href="${href}" style="text-decoration:none;color:inherit"><div class="card sp"><div><b>${ic} ${t}</b><div class="m">${d}</div></div><span class="tag">खोलें</span></div></a>`
+    : `<div class="card sp lock"><div><b>${ic} ${t}</b><div class="m">${d}</div></div><span class="tag">जल्द</span></div>`;
+  $('view').innerHTML = item('📣', 'प्रमोशन जाँच', 'यूज़र के जमा किए पोस्ट मंज़ूर या नामंज़ूर करें', '#more/promo') + item('🛡️', 'Admin Logs', 'हर Admin कार्रवाई का रिकॉर्ड', '#more/logs') +
+    item('🪙', 'Coins और Rewards', 'चरण 6', '') + item('🔔', 'Notifications', 'चरण 7', '') + item('📊', 'Reports', 'चरण 8', '') + item('⚙️', 'App Settings', 'चरण 10', '') +
+    `<div class="card"><div class="m">लॉगिन: ${esc(me.email)}</div><div class="row"><button class="btn bad" id="out">बाहर निकलें</button></div></div>`;
+  $('out').onclick = () => firebase.auth().signOut();
+}
+function pPromo() {
+  const open = allPr().filter(x => x.p.status === 'pending').sort((a, b) => new Date(a.p.at) - new Date(b.p.at));
   const tier = (v) => { for (const t of PR_TIERS) if (v >= t[0]) return t[1]; return 0; };
-  $('list').innerHTML = `<h3>जाँच बाकी (${open.length})</h3>` + (open.map(x => { const p = x.p, c = tier(p.views);
-    return `<div class="card"><div class="sp"><b>${esc(p.platform)} · ${p.views} Views</b><span class="tag">${c ? c + ' Coins' : 'कम Views'}</span></div>
-    <div class="m">${esc(x.r.u.name)} · ${esc(x.r.u.email || '')}</div><div><a href="${esc(p.link)}" target="_blank" rel="noopener">पोस्ट खोलें</a> · स्क्रीनशॉट: ${esc(p.shot)}</div>
+  $('view').innerHTML = `<a href="#more" class="btn soft sm">← वापस</a><h2>📣 जाँच बाकी (${open.length})</h2>` + (open.map(x => { const p = x.p, c = tier(p.views);
+    return `<div class="card"><div class="sp"><b>${esc(p.platform)} · ${p.views} Views</b><span class="tag ${c ? 'ok' : 'bad'}">${c ? c + ' Coins' : 'कम Views'}</span></div>
+    <div class="m">${esc(x.r.u.name)} · ${esc(x.r.u.email || '')}</div><div style="margin-top:4px"><a href="${esc(p.link)}" target="_blank" rel="noopener">🔗 पोस्ट खोलें</a> · स्क्रीनशॉट: ${esc(p.shot)}</div>
     <div class="m">${fdt(p.at)} · ID ${esc(p.id)}</div>
-    <div class="row"><button class="btn ok" data-pa="ok" data-u="${x.r.id}" data-p="${esc(p.id)}">✅ मंज़ूर</button><button class="btn bad" data-pa="no" data-u="${x.r.id}" data-p="${esc(p.id)}">❌ नामंज़ूर</button></div></div>`; }).join('') || '<div class="m">कोई पोस्ट नहीं।</div>');
+    <div class="row"><button class="btn ok" data-pa="ok" data-u="${x.r.id}" data-p="${esc(p.id)}">✅ मंज़ूर</button><button class="btn bad" data-pa="no" data-u="${x.r.id}" data-p="${esc(p.id)}">❌ नामंज़ूर</button></div></div>`; }).join('') || '<div class="card m">कोई पोस्ट नहीं।</div>');
   document.querySelectorAll('[data-pa]').forEach(b => b.onclick = () => prAct(b.dataset.pa, b.dataset.u, b.dataset.p));
 }
-function paintUs() {
-  const list = rows.slice().sort((a, b) => (b.u.earned || 0) - (a.u.earned || 0));
-  $('list').innerHTML = `<div class="m">कुल यूज़र: ${list.length}</div>` + list.map(r => { const u = r.u, led = u.ledger || [];
-    const sum = led.reduce((a, t) => a + (Number(t.coins) || 0), 0), bad = led.length < 290 && sum !== (u.coins || 0);
-    return `<div class="card"><div class="sp"><b>${esc(u.name)}</b>${bad ? '<span class="tag w">⚠ हिसाब नहीं मिलता</span>' : ''}</div>
-    <div class="m">${esc(u.email || '')} · जुड़े: ${esc(u.created || '')}</div>
-    <div>कमाई ${u.earned || 0} · Coins ${u.coins || 0} · निकाले ₹${u.withdrawn || 0} · निकासी ${(u.withdrawals || []).length}</div>
-    ${bad ? `<div class="m">लेजर का जोड़ ${sum}, पर Coins ${u.coins || 0}। हो सकता है छेड़छाड़ हुई हो, निकासी से पहले जाँचें।</div>` : ''}</div>`; }).join('');
+function pLogs() {
+  $('view').innerHTML = `<a href="#more" class="btn soft sm">← वापस</a><h2>🛡️ Admin Logs</h2><div class="card">` + (logs.map(l => `<div class="act"><i>🛡️</i><div><b>${esc(l.action)}</b> · ${esc(l.target || '')}<div class="m">${esc(l.detail || '')}</div><div class="m">${fdt(l.at)} · ${esc(l.admin || '')}</div></div></div>`).join('') || '<div class="m">अभी कोई रिकॉर्ड नहीं। (Rules में adminLogs वाला हिस्सा लगाने के बाद दिखेगा।)</div>') + '</div>';
 }
-async function change(uid, fn) {
+
+/* ---------- कार्रवाइयाँ (हर कार्रवाई Transaction में + Admin Log) ---------- */
+async function change(uid, fn, log) {
   const ref = db.collection('users').doc(uid);
   await db.runTransaction(async (t) => {
     const s = await t.get(ref); if (!s.exists) throw new Error('यूज़र नहीं मिला');
     const u = JSON.parse(s.data().data); fn(u); if (!u.ledger) u.ledger = [];
     u._ts = Date.now();
     t.set(ref, { data: JSON.stringify(u), ts: u._ts, name: String(u.name || ''), email: String(u.email || ''), coins: Number(u.coins) || 0, earned: Number(u.earned) || 0 });
+    t.set(db.collection('adminLogs').doc(), Object.assign({ at: new Date().toISOString(), admin: me.email, uid }, log));
   });
 }
 async function wdAct(a, uid, wid) {
-  const msg = a === 'paid' ? 'पक्का? इसे "भुगतान हो गया" मार्क करें (पैसा UPI से भेज चुके हों)।' : 'पक्का? नामंज़ूर करने पर Coins यूज़र को लौट जाएँगे।';
-  if (!confirm(msg)) return;
+  let ref = '', reason = '';
+  if (a === 'paid') { ref = (prompt('भुगतान का Reference/UTR नंबर लिखें (ज़रूरी):') || '').trim(); if (ref.length < 4) return alert('Reference नंबर ज़रूरी है। "Paid" तभी लगाएँ जब UPI से पैसा चला गया हो।'); }
+  else { reason = (prompt('नामंज़ूर करने का कारण लिखें (ज़रूरी). Coins यूज़र को लौट जाएँगे:') || '').trim(); if (reason.length < 3) return alert('कारण ज़रूरी है।'); }
   try {
     await change(uid, (u) => {
       const w = (u.withdrawals || []).find(x => x.id === wid); if (!w || !OPEN.includes(w.status)) throw new Error('Request पहले ही बदल चुकी है');
       const now = new Date().toISOString(); w.upd = now; w.log = w.log || [];
-      if (a === 'paid') { w.status = 'Completed'; u.withdrawn = (u.withdrawn || 0) + w.amount; }
-      else { w.status = 'Rejected'; u.coins = (u.coins || 0) + w.coins; u.ledger.unshift({ id: uidn('TXN'), type: 'Withdrawal Refund', coins: w.coins, at: now, ref: w.id }); }
+      if (a === 'paid') { w.status = 'Completed'; w.payRef = ref; u.withdrawn = (u.withdrawn || 0) + w.amount; }
+      else { w.status = 'Rejected'; w.reason = reason; u.coins = (u.coins || 0) + w.coins; u.ledger.unshift({ id: uidn('TXN'), type: 'Withdrawal Refund', coins: w.coins, at: now, ref: w.id }); }
       w.log.push({ s: w.status, at: now });
-    });
+    }, { action: a === 'paid' ? 'निकासी Paid' : 'निकासी नामंज़ूर', target: wid, detail: a === 'paid' ? 'Ref ' + ref : reason });
     await load();
   } catch (e) { alert('नहीं हुआ: ' + (e.message || e.code)); }
 }
@@ -133,8 +232,8 @@ async function prAct(a, uid, pid) {
       let c = 0; for (const t of PR_TIERS) if (p.views >= t[0]) { c = t[1]; break; }
       if (a === 'ok' && c) { const tx = uidn('TXN'), now = new Date().toISOString(); p.status = 'approved'; p.coins = c; p.tx = tx; p.note = ''; u.coins = (u.coins || 0) + c; u.earned = (u.earned || 0) + c; u.ledger.unshift({ id: tx, type: 'App Promote', coins: c, at: now, ref: p.id }); }
       else { p.status = 'rejected'; p.note = a === 'ok' ? PR_MIN_VIEWS + ' से कम Views' : 'Admin ने नामंज़ूर किया'; }
-    });
+    }, { action: a === 'ok' ? 'प्रमोशन मंज़ूर' : 'प्रमोशन नामंज़ूर', target: pid, detail: '' });
     await load();
   } catch (e) { alert('नहीं हुआ: ' + (e.message || e.code)); }
 }
-</script></div></body></html>
+</script></body></html>

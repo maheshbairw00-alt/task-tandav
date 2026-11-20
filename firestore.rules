@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['maheshbairw00@gmail.com'];
+    }
+    function validDoc() {
+      return request.resource.data.keys().hasOnly(['data','ts','name','email','coins','earned'])
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 900000;
+    }
+
+    match /users/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == uid && validDoc();
+      allow update: if request.auth != null && (request.auth.uid == uid || isAdmin()) && validDoc();
+      allow delete: if false;
+    }
+
+    match /adminLogs/{id} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+  }
+}
