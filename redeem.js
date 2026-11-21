@@ -41,12 +41,12 @@ function viewRedeem() {
       ${blocked ? `<div class="exwhy bad">आज की सीमा पूरी हो गई। अगला रिडीम ${esc(rdNextText(cnt))} बाद कर सकेंगे।</div>` : ''}</div>
     <div class="exsub">💸 UPI से रिडीम करें</div><div class="duo" style="margin-bottom:12px">${cards}</div>
     <div class="exsub">🎁 कार्ड</div>` +
-    RD_CARDS.map((c, i) => `<button class="exrow" data-rdcard="${i}"><div class="prico">${c.e}</div><div style="flex:1"><b>${esc(c.t)}</b></div><span class="bd pn">जल्द आएगा</span></button>`).join('') +
+    RD_CARDS.map((c, i) => `<button class="exrow" data-rdcard="${i}"><div class="prico">${c.e}</div><div style="flex:1"><b>${esc(c.t)}</b></div><span class="ar">›</span></button>`).join('') +
     `<div class="exsub">📋 मेरे हाल के रिडीम</div><div class="card">${recent}<button class="btn soft" id="rdAll" style="margin-top:10px">सारा रिडीम देखें</button></div></div>${navHTML('wallet')}`;
   bindNav(); $('back').onclick = () => go('wallet');
   $('rdAll').onclick = () => { walletTab = 'pending'; go('wallet'); };
   document.querySelectorAll('[data-rd]').forEach(b => b.onclick = () => rdConfirm(Number(b.dataset.rd)));
-  document.querySelectorAll('[data-rdcard]').forEach(b => b.onclick = () => toast(RD_CARDS[b.dataset.rdcard].m));
+  document.querySelectorAll('[data-rdcard]').forEach(b => b.onclick = () => toast('अभी उपलब्ध नहीं है।'));
 }
 function rdConfirm(a) {
   const u = walUser(), need = a * RD_COINS_PER_RS;

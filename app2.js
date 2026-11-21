@@ -227,7 +227,7 @@ function viewTasks() {
    Diamond से जुड़ी खरीद के लिए Google Play Billing चाहिए। */
 const GM_LIMIT = 5, GM_ROUNDS = 3, GM_SHOW_MS = 2000, AD_SEC = 5;
 const GM_EMO = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10', 'g11', 'g12'];   // रंगीन आकार (icons.js में)
-const SO_OFFER = { id: 'so_demo1', name: 'Demo App Offer', fee: 28, steps: [
+const SO_OFFER = { id: 'so_offer1', live: false, name: 'Offer', fee: 28, steps: [
   { k: 'install', t: 'Install App', d: 'ऐप इंस्टॉल करें और कुछ मिनट चलाएँ।', c: 540 },
   { k: 'shot', t: 'Screenshot', d: 'ऐप में साइन-अप करें और Screenshot अपलोड करें।', c: 405, proof: true },
   { k: 'use1', t: 'Use App', d: 'ऐप 5 मिनट और चलाएँ।', c: 472 },
@@ -265,10 +265,10 @@ function viewGame() {
         <div class="hint">हर राउंड में एक निशान कुछ सेकंड दिखेगा। उसे याद रखें और फिर सही निशान चुनें। ${GM_ROUNDS} राउंड, पूरा होने पर 1 💎 (Ad देखने के बाद)।</div>
         <div class="hint">आज: ${n}/${GM_LIMIT} गेम</div>
         <button class="btn primary" id="gmGo" style="margin-top:12px" ${n >= GM_LIMIT ? 'disabled' : ''}>${n >= GM_LIMIT ? 'आज की सीमा पूरी' : 'Get Start'}</button></div>
-      ${PLAY_PARTNERS.some(x => x.live) ? `<div class="sec" style="margin-top:16px"><h2>Task Partners</h2>
-      <div class="pgrid">${PLAY_PARTNERS.map((x, i) => x.live ? `<div class="pcard"><small>Task Partner</small><div class="pav">${x.e}</div><b>${esc(x.n)}</b><button class="btn soft" data-pp="${i}">Get Now →</button></div>` : '').join('')}</div></div>` : ''}</div>${navHTML('home')}`;
+      <div class="sec" style="margin-top:16px"><h2>Task Partners</h2>
+      <div class="pgrid">${PLAY_PARTNERS.map((x, i) => `<div class="pcard"><small>Task Partner</small><div class="pav">${x.e}</div><b>${esc(x.n)}</b><button class="btn soft" data-pp="${i}">Get Now →</button></div>`).join('')}</div></div></div>${navHTML('home')}`;
     bindNav(); $('back').onclick = () => go('home');
-    document.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => { const x = PLAY_PARTNERS[Number(b.dataset.pp)]; toast(x.live ? x.n + ' खुल रहा है…' : x.n + ' अभी जुड़ा नहीं है। Ad Network की मंज़ूरी के बाद खुलेगा।'); });
+    document.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => { const x = PLAY_PARTNERS[Number(b.dataset.pp)]; toast(x.live ? x.n + ' खुल रहा है…' : 'अभी उपलब्ध नहीं है।'); });
     $('gmGo').onclick = () => { gmPlay = { id: uid('G'), r: 0, ok: 0, step: 'show', done: false, credited: false }; gmRound(); };
     return;
   }
@@ -395,8 +395,8 @@ function viewOffers() {
   } else {
     body = `<div class="card"><div class="split"><div class="hi"><small>Offers Completed</small><b style="font-size:24px">🏅 ${doneN}</b></div><button class="pill ghost" id="soHist">View History</button></div></div>
       <div class="sec" style="margin-top:14px"><h2>Super Offers <span class="bd pn">NEW OFFER</span></h2>
-      <div class="card"><div class="split"><div><b>${esc(SO_OFFER.name)}</b><br><small>🪙 ${total} Coins तक</small></div><span class="dchip">💎 ${SO_OFFER.fee} Fees</span></div>
-      <button class="btn primary" id="soGo" style="margin-top:10px" ${was ? 'disabled' : ''}>${was ? 'Offer पूरा हो चुका ✓' : act ? 'Offer खोलें' : 'Complete Offer'}</button></div></div>` +
+      ${SO_OFFER.live ? `<div class="card"><div class="split"><div><b>${esc(SO_OFFER.name)}</b><br><small>🪙 ${total} Coins तक</small></div><span class="dchip">💎 ${SO_OFFER.fee} Fees</span></div>
+      <button class="btn primary" id="soGo" style="margin-top:10px" ${was ? 'disabled' : ''}>${was ? 'Offer पूरा हो चुका ✓' : act ? 'Offer खोलें' : 'Complete Offer'}</button></div>` : '<div class="card"><div class="hint" style="text-align:center">अभी कोई Offer उपलब्ध नहीं है।</div></div>'}</div>` +
       (act ? `<div class="sec"><h2>Pending Offers</h2><button class="trow" id="soPend"><div style="flex:1"><b>${esc(act.name)}</b><small>शुरू: ${fdt(act.start)}</small><div class="bar" style="margin:6px 0"><i style="width:${Math.round(act.steps.filter(s => soStepDone(s.st)).length / act.steps.length * 100)}%"></i></div><small>Progress: ${act.steps.filter(s => soStepDone(s.st)).length}/${act.steps.length} tasks</small></div><span>›</span></button></div>` : '') +
       ``;
   }
@@ -485,9 +485,9 @@ function moreEarnHTML() {
   const on = MORE_EARN.map((x, i) => [x, i]).filter(([x, i]) => typeof feat === 'function' && feat('more' + i));
   if (!on.length) return '';
   return `<div class="sec" style="margin-top:14px"><h2>रिवॉर्ड पाने के तरीके</h2><div class="duo">` +
-    on.map(([x, i]) => `<button class="mcard" onclick="moreSoon(${i})"><div class="mico">${x.e}</div><b>${esc(x.t)}</b><span class="bd pn">जल्द आएगा</span></button>`).join('') + `</div></div>`;
+    on.map(([x, i]) => `<button class="mcard" onclick="moreSoon(${i})"><div class="mico">${x.e}</div><b>${esc(x.t)}</b></button>`).join('') + `</div></div>`;
 }
-function moreSoon(i) { toast(MORE_EARN[i].m); }
+function moreSoon(i) { toast('अभी उपलब्ध नहीं है।'); }
 
 function openCal() {
   const u = api.currentUser(); const cs = api.checkinState(u);

@@ -361,7 +361,7 @@ function pLogs() {
   $('lq').oninput = (e) => { logQ = e.target.value; const p = e.target.selectionStart; pLogs(); const n = $('lq'); n.focus(); n.setSelectionRange(p, p); };
 }
 let featCfg = {};
-const FEAT_LIST = [['more0','Paid Surveys'],['more1','App Testing'],['more2','Website Reviews'],['more3','Mini Freelance Jobs'],['more4','Shopping Cashback'],['more5','Local Business Leads'],['more6','Sponsored Campaigns'],['more7','Business के लिए'],['more8','Watch & Get Rewards'],['more9','Daily Poll'],['survey','Survey (Explore Tasks में)'],['offerwall','Offerwall (Explore Tasks में)'],['offers','Offers की पट्टी (App Install, Game, Shopping...)'],['promote','App Promote']];
+const FEAT_LIST = [['more0','Paid Surveys'],['more1','App Testing'],['more2','Website Reviews'],['more3','Mini Freelance Jobs'],['more4','Shopping Cashback'],['more5','Local Business Leads'],['more6','Sponsored Campaigns'],['more7','Business के लिए'],['more8','Watch & Get Rewards'],['more9','Daily Poll'],['superoffer','Super Offer (Home पर)'],['survey','Survey (Explore Tasks में)'],['offerwall','Offerwall (Explore Tasks में)'],['offers','Offers की पट्टी (App Install, Game, Shopping...)'],['promote','App Promote']];
 function pFeedback() {
   $('view').innerHTML = back + '<h2>💬 Feedback (ताज़ा 50)</h2>' + (fbRows.map(f => `<div class="card"><div class="sp"><b>${esc(f.name || '')} · ${esc(f.uid2 || '')}</b><span class="tag ${f.status === 'approved' ? 'ok' : f.status === 'rejected' ? 'bad' : ''}">${esc(f.status)}</span></div>
     <div class="m">${'★'.repeat(f.rating || 0)}${'☆'.repeat(5 - (f.rating || 0))} · ${fdt(f.at)}</div>
@@ -376,10 +376,10 @@ function pSettings() {
   $('view').innerHTML = back + `<div class="card"><div class="sp"><b>🛠️ Maintenance Mode</b><span class="tag ${on ? 'bad' : 'ok'}">${on ? 'चालू' : 'बंद'}</span></div><div class="m">चालू करने पर ऐप खोलने वालों को नीचे का संदेश दिखेगा और ऐप रुक जाएगा।</div>
   <input type="text" id="mm" style="margin-top:8px" placeholder="संदेश" value="${esc(cfg.msg || 'ऐप में सुधार का काम चल रहा है। थोड़ी देर बाद आएँ।')}"><div class="row"><button class="btn ${on ? 'ok' : 'bad'}" id="mt">${on ? 'बंद करें' : 'चालू करें'}</button></div></div>
   <div class="card"><b>ऐप के फ़ीचर (चालू/बंद)</b><div class="m">बंद फ़ीचर ऐप में दिखता ही नहीं। जो तैयार हो जाए, उसे यहाँ से चालू करें। यूज़र के ऐप में कुछ देर या दोबारा खोलने पर बदलाव दिखता है।</div>
-  ${FEAT_LIST.map(([k, n]) => `<div class="sp" style="margin-top:8px"><span>${esc(n)}</span><button class="btn ${featCfg[k] ? 'ok' : 'bad'} sm" data-ft="${k}">${featCfg[k] ? 'चालू' : 'बंद'}</button></div>`).join('')}</div>
+  ${FEAT_LIST.map(([k, n]) => `<div class="sp" style="margin-top:8px"><span>${esc(n)}</span><button class="btn ${featCfg[k] !== false ? 'ok' : 'bad'} sm" data-ft="${k}">${featCfg[k] !== false ? 'चालू' : 'बंद'}</button></div>`).join('')}</div>
   <div class="card"><b>सिर्फ़ जानकारी</b><div class="m">${COINS_PER_RS} Coins = ₹1 · प्रमोशन न्यूनतम ${PR_MIN_VIEWS} Views · Admin ईमेल सूची और निकासी की दरें कोड/Rules में तय हैं।</div></div>`;
   document.querySelectorAll('[data-ft]').forEach(b => b.onclick = async () => {
-    const k = b.dataset.ft, nv = !featCfg[k], nm = (FEAT_LIST.find(x => x[0] === k) || [])[1] || k;
+    const k = b.dataset.ft, nv = featCfg[k] === false, nm = (FEAT_LIST.find(x => x[0] === k) || [])[1] || k;
     if (!confirm(nm + (nv ? ' चालू करें?' : ' बंद करें?'))) return;
     const f = Object.assign({}, featCfg); f[k] = nv;
     try { await db.collection('appSettings').doc('features').set({ f, at: new Date().toISOString(), admin: me.email }); await logA(nv ? 'फ़ीचर चालू' : 'फ़ीचर बंद', nm, ''); await load(); }

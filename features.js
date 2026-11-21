@@ -1,13 +1,13 @@
 /* ---------- Admin ON/OFF स्विच ----------
    Admin पैनल -> App Settings -> "ऐप के फ़ीचर" से चालू/बंद होता है।
-   कुछ भी तय न हो (या इंटरनेट न हो) तो फ़ीचर बंद माना जाता है, यानी स्क्रीन पर दिखता ही नहीं। */
+   Admin ने बंद न किया हो तो फ़ीचर दिखता रहता है। */
 const FEAT_LIST = [
   ['more0', 'Paid Surveys'], ['more1', 'App Testing'], ['more2', 'Website Reviews'],
   ['more3', 'Mini Freelance Jobs'], ['more4', 'Shopping Cashback'], ['more5', 'Local Business Leads'],
   ['more6', 'Sponsored Campaigns'], ['more7', 'Business के लिए'], ['more8', 'Watch & Get Rewards'], ['more9', 'Daily Poll'],
-  ['survey', 'Survey (Explore Tasks में)'], ['offerwall', 'Offerwall (Explore Tasks में)'], ['offers', 'Offers की पट्टी (App Install, Game, Shopping...)'], ['promote', 'App Promote']
+  ['superoffer', 'Super Offer (Home पर)'], ['survey', 'Survey (Explore Tasks में)'], ['offerwall', 'Offerwall (Explore Tasks में)'], ['offers', 'Offers की पट्टी (App Install, Game, Shopping...)'], ['promote', 'App Promote']
 ];
-function feat(k) { try { return !!JSON.parse(localStorage.getItem('tt_feat') || '{}')[k]; } catch (e) { return false; } }
+function feat(k) { try { const f = JSON.parse(localStorage.getItem('tt_feat') || '{}'); return f[k] !== false; } catch (e) { return true; } }
 async function featLoad() {
   try {
     if (typeof CL_OK === 'undefined' || !CL_OK || !firebase.auth().currentUser) return;

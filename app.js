@@ -119,6 +119,7 @@ function route() {
   const u = api.currentUser();
   let v = (location.hash || '').replace('#', '');
   if (!['register', 'login', 'home', 'captcha', 'wallet', 'profile', 'tasks', 'quiz', 'reading', 'game', 'offers', 'mission', 'exam', 'promote', 'redeem', 'watch', 'notifs', 'feedback'].includes(v)) v = '';
+  if (v === 'offers' && !feat('superoffer')) v = '';
   if (!u && (v === 'home' || v === 'captcha' || v === 'wallet' || v === 'profile' || v === 'tasks' || v === 'quiz' || v === 'reading' || v === 'game' || v === 'offers' || v === 'mission' || v === 'exam' || v === 'promote' || v === 'redeem')) v = '';
   if (u && (v === 'login' || v === 'register')) v = 'home';
   if (!v) v = u ? 'home' : (Object.keys(api.users()).length ? 'login' : 'register');
@@ -298,7 +299,7 @@ function viewHome() {
   </div>
 
   <div class="sec"><div class="duo">
-    <button class="dcard so" data-go="offers"><span class="tag">NEW</span><b>Super<br>Offer</b><small>🪙 2700+ Coins</small></button>
+    ${feat('superoffer') ? `<button class="dcard so" data-go="offers"><span class="tag">NEW</span><b>Super<br>Offer</b><small>🪙 2700+ Coins</small></button>` : ''}
     <button class="dcard pg" data-go="game"><span class="tag">💎 पाएँ</span><b>Play<br>Game!</b><small>खेलें और 💎 जीतें</small><span class="big">🎮</span></button>
   </div></div>
 
@@ -328,7 +329,7 @@ function viewHome() {
   ${navHTML('home')}`;
   bindNav();
 
-  document.querySelectorAll('[data-soon]').forEach(b => b.onclick = (e) => { e.preventDefault(); toast(b.dataset.soon + ' पेज अगले चरण में बनेगा'); });
+  document.querySelectorAll('[data-soon]').forEach(b => b.onclick = (e) => { e.preventDefault(); toast('अभी उपलब्ध नहीं है।'); });
   $('claim').onclick = () => {
     const r = api.claimCheckin();
     if (!r.ok) return toast(r.msg);
@@ -460,7 +461,7 @@ const navHTML = (on) => '<nav class="nav">' + NAV.map(([k, e, n]) => `<button da
 function bindNav() {
   document.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => {
     const k = b.dataset.nav;
-    if (k === 'home' || k === 'wallet' || k === 'profile' || k === 'tasks') go(k); else toast(NAV.find(x => x[0] === k)[2] + ' पेज अगले चरण में बनेगा');
+    if (k === 'home' || k === 'wallet' || k === 'profile' || k === 'tasks') go(k); else toast('अभी उपलब्ध नहीं है।');
   });
 }
 const bdc = (s) => s === 'Completed' ? '' : (['Rejected', 'Failed', 'Cancelled'].includes(s) ? 'rj' : 'pn');
