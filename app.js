@@ -118,7 +118,7 @@ const OFFERS = ['App Install','Game','Shopping','Special','Premium'];
 function route() {
   const u = api.currentUser();
   let v = (location.hash || '').replace('#', '');
-  if (!['register', 'login', 'home', 'captcha', 'wallet', 'profile', 'tasks', 'quiz', 'reading', 'game', 'offers', 'mission', 'exam', 'promote', 'redeem', 'watch', 'notifs', 'feedback'].includes(v)) v = '';
+  if (!['register', 'login', 'home', 'captcha', 'wallet', 'profile', 'tasks', 'quiz', 'reading', 'game', 'offers', 'mission', 'exam', 'promote', 'redeem', 'watch', 'offerwall', 'notifs', 'feedback'].includes(v)) v = '';
   if (v === 'offers' && !feat('superoffer')) v = '';
   if (!u && (v === 'home' || v === 'captcha' || v === 'wallet' || v === 'profile' || v === 'tasks' || v === 'quiz' || v === 'reading' || v === 'game' || v === 'offers' || v === 'mission' || v === 'exam' || v === 'promote' || v === 'redeem')) v = '';
   if (u && (v === 'login' || v === 'register')) v = 'home';
@@ -141,6 +141,7 @@ function route() {
   else if (v === 'promote') { if (feat('promote')) viewPromote(); else go('home'); }
   else if (v === 'redeem') viewRedeem();
   else if (v === 'watch') viewWatch();
+  else if (v === 'offerwall') { if (feat('tile_offerwall')) viewOfferwall(); else go('home'); }
   else if (v === 'notifs') viewNotifs();
   else if (v === 'feedback') viewFeedback();
   else viewHome();
@@ -304,11 +305,11 @@ function viewHome() {
   </div></div>
 
   <div class="sec"><h2>Explore Tasks</h2>
-    <div class="grid5">${EXPLORE.filter(([e, n]) => feat('tile_' + n.toLowerCase())).map(([e, n, c]) => `<button class="tile" ${n === 'Quiz' || n === 'Reading' || n === 'Feedback' ? `data-go="${n.toLowerCase()}"` : `data-soon="${n} Tasks"`}><div class="e ${c}">${e}</div><b>${n}</b><small>Reward: Task के अनुसार</small></button>`).join('')}</div>
+    <div class="grid5">${EXPLORE.filter(([e, n]) => feat('tile_' + n.toLowerCase())).map(([e, n, c]) => `<button class="tile" ${n === 'Quiz' || n === 'Reading' || n === 'Feedback' || n === 'Offerwall' ? `data-go="${n.toLowerCase()}"` : `data-soon="${n} Tasks"`}><div class="e ${c}">${e}</div><b>${n}</b><small>Reward: Task के अनुसार</small></button>`).join('')}</div>
   </div>
 
   ${OFFERS.some((o, i) => feat('chip' + i)) ? `<div class="sec"><h2>Offers</h2>
-    <div class="chips">${OFFERS.map((o, i) => !feat('chip' + i) ? '' :  `<button class="chip" data-soon="${o} Offers">${o}</button>`).join('')}</div>
+    <div class="chips">${OFFERS.map((o, i) => !feat('chip' + i) ? '' :  (i < 2 && feat('tile_offerwall') ? `<button class="chip" data-go="offerwall">${o}</button>` : `<button class="chip" data-soon="${o} Offers">${o}</button>`)).join('')}</div>
   </div>` : ''}
 
   <div class="sec" ${feat('mission') ? '' : 'hidden'}><h2>Daily Mission</h2>
