@@ -430,7 +430,7 @@ function viewMission() {
   const u = msUser();
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>Daily Mission</b></div><span style="width:40px"></span></div>` +
-    MISSIONS.map(m => {
+    MISSIONS.filter(m => feat(m.id)).map(m => {
       const done = !!u.missions[m.id];
       let act;
       if (!m.coins) act = `<a class="msbtn open" href="${m.url}" target="_blank" rel="noopener">खोलें →</a>`;

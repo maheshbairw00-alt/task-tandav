@@ -283,7 +283,7 @@ function viewHome() {
     <div class="btns"><button class="w" id="homeWd">Redeem</button><button id="homeHist">History</button></div>
   </div>
 
-  <div class="sec"><h2>Daily Check-in <a href="#" id="cal">पूरा कैलेंडर ▸</a></h2>
+  <div class="sec" ${feat('checkin') ? '' : 'hidden'}><h2>Daily Check-in <a href="#" id="cal">पूरा कैलेंडर ▸</a></h2>
     <div class="card checkin">
       <div class="day"><div>${cs.day || 1}<span>Day</span></div></div>
       <div class="info"><b>आज का रिवॉर्ड: ${cs.reward || rewardForDay(1)} Coin${(cs.reward || 1) > 1 ? 's' : ''}${cs.bonus ? ' + ' + cs.bonus + ' बोनस' : ''}</b><small>${cs.done ? '365 दिन पूरे! 🎉' : cs.claimedToday ? 'आज का रिवॉर्ड मिल गया ✓' : 'रोज़ आएँ, इनाम बढ़ता जाएगा'}</small></div>
@@ -291,7 +291,7 @@ function viewHome() {
     </div>
   </div>
 
-  <div class="sec"><h2>CAPTCHA Task</h2>
+  <div class="sec" ${feat('captcha') ? '' : 'hidden'}><h2>CAPTCHA Task</h2>
     <div class="card">
       <div class="split"><div><b>आज: ${capDone}/${MAX_CAPTCHA}</b><br><small>सही CAPTCHA पर Coins, रोज़ अधिकतम 10</small></div><button class="pill ghost" id="startCaptcha">Start</button></div>
       <div class="bar"><i style="width:${capDone / MAX_CAPTCHA * 100}%"></i></div>
@@ -300,25 +300,25 @@ function viewHome() {
 
   <div class="sec"><div class="duo">
     ${feat('superoffer') ? `<button class="dcard so" data-go="offers"><span class="tag">NEW</span><b>Super<br>Offer</b><small>🪙 2700+ Coins</small></button>` : ''}
-    <button class="dcard pg" data-go="game"><span class="tag">💎 पाएँ</span><b>Play<br>Game!</b><small>खेलें और 💎 जीतें</small><span class="big">🎮</span></button>
+    ${feat('game') ? `<button class="dcard pg" data-go="game"><span class="tag">💎 पाएँ</span><b>Play<br>Game!</b><small>खेलें और 💎 जीतें</small><span class="big">🎮</span></button>` : ''}
   </div></div>
 
   <div class="sec"><h2>Explore Tasks</h2>
-    <div class="grid5">${EXPLORE.filter(([e, n]) => (n !== 'Survey' || feat('survey')) && (n !== 'Offerwall' || feat('offerwall'))).map(([e, n, c]) => `<button class="tile" ${n === 'Quiz' || n === 'Reading' || n === 'Feedback' ? `data-go="${n.toLowerCase()}"` : `data-soon="${n} Tasks"`}><div class="e ${c}">${e}</div><b>${n}</b><small>Reward: Task के अनुसार</small></button>`).join('')}</div>
+    <div class="grid5">${EXPLORE.filter(([e, n]) => feat('tile_' + n.toLowerCase())).map(([e, n, c]) => `<button class="tile" ${n === 'Quiz' || n === 'Reading' || n === 'Feedback' ? `data-go="${n.toLowerCase()}"` : `data-soon="${n} Tasks"`}><div class="e ${c}">${e}</div><b>${n}</b><small>Reward: Task के अनुसार</small></button>`).join('')}</div>
   </div>
 
-  ${feat('offers') ? `<div class="sec"><h2>Offers</h2>
-    <div class="chips">${OFFERS.map(o => `<button class="chip" data-soon="${o} Offers">${o}</button>`).join('')}</div>
+  ${OFFERS.some((o, i) => feat('chip' + i)) ? `<div class="sec"><h2>Offers</h2>
+    <div class="chips">${OFFERS.map((o, i) => !feat('chip' + i) ? '' :  `<button class="chip" data-soon="${o} Offers">${o}</button>`).join('')}</div>
   </div>` : ''}
 
-  <div class="sec"><h2>Daily Mission</h2>
+  <div class="sec" ${feat('mission') ? '' : 'hidden'}><h2>Daily Mission</h2>
     <div class="card split"><div><b>🎯 आज का Mission</b><br><small>Verification के बाद ही Reward मिलेगा</small></div><button class="pill ghost" data-go="mission">खोलें</button></div>
   </div>
 
-  ${exHomeHTML()}
+  ${feat('exam') ? exHomeHTML() : ''}
 
 
-  <div class="sec"><div class="card creator">
+  <div class="sec" ${feat('watch') ? '' : 'hidden'}><div class="card creator">
     <div class="mico">▶️</div>
     <div class="t"><b>Watch YouTube Video</b><small>टास्क कैसे पूरा करें, वीडियो में देखें</small></div>
     <button class="pill ghost" data-go="watch">देखें</button>
@@ -626,7 +626,7 @@ function viewProfile() {
     <div class="card"><div class="phead"><div class="pavatar">${esc(u.name.trim()[0].toUpperCase())}</div>
       <div style="flex:1;min-width:0"><b style="font-size:17px">${esc(u.name)}</b><div class="hint">User ID: ${esc(u.id)}</div><div class="hint">Member since: ${esc(u.created)}</div><span class="bd">✓ Mobile Verified</span></div></div>
       <button class="btn soft" style="margin-top:12px" data-pm="edit">Edit Profile</button></div>
-    <div class="menu">${items.map(([i, n, k]) => `<button class="mrow" data-pm="${k}"><span class="mi">${i}</span>${n}${k === 'ntf' && unread ? ` <span class="bd pn">${unread}</span>` : ''}<span class="ar">›</span></button>`).join('')}
+    <div class="menu">${items.filter(([i, n, k]) => !['lead', 'ref', 'lang'].includes(k) || feat('p_' + k)).map(([i, n, k]) => `<button class="mrow" data-pm="${k}"><span class="mi">${i}</span>${n}${k === 'ntf' && unread ? ` <span class="bd pn">${unread}</span>` : ''}<span class="ar">›</span></button>`).join('')}
       <button class="mrow out" data-pm="logout"><span class="mi">🚪</span>Logout<span class="ar">›</span></button></div>
   </div>${navHTML('profile')}`;
   bindNav();

@@ -27,7 +27,7 @@ function walWithdrawSheet() { go('redeem'); }   // पुराने Withdraw �
 function viewRedeem() {
   if (!api.currentUser()) return go('login');
   const u = walUser(), cnt = rdCounted(u), left = Math.max(0, RD_MAX_REQ - cnt.length), blocked = left === 0;
-  const cards = RD_AMOUNTS.map(a => {
+  const cards = RD_AMOUNTS.filter(a => feat('rdamt' + a)).map(a => {
     const need = a * RD_COINS_PER_RS, ok = u.coins >= need, pct = Math.min(100, Math.floor(u.coins / need * 100));
     return `<div class="rdc ${ok && !blocked ? '' : 'lock'}"><small>UPI</small><b>₹${a.toLocaleString('en-IN')}</b>
       <div class="rdn">${Math.min(u.coins, need).toLocaleString('en-IN')} / ${need.toLocaleString('en-IN')}</div><div class="bar"><i style="width:${pct}%"></i></div>
@@ -40,8 +40,8 @@ function viewRedeem() {
       <div style="text-align:right"><small>${RD_WINDOW_HR} घंटे में रिडीम</small><div style="font-size:20px;font-weight:800">${left}/${RD_MAX_REQ} बची</div></div></div>
       ${blocked ? `<div class="exwhy bad">आज की सीमा पूरी हो गई। अगला रिडीम ${esc(rdNextText(cnt))} बाद कर सकेंगे।</div>` : ''}</div>
     <div class="exsub">💸 UPI से रिडीम करें</div><div class="duo" style="margin-bottom:12px">${cards}</div>
-    <div class="exsub">🎁 कार्ड</div>` +
-    RD_CARDS.map((c, i) => `<button class="exrow" data-rdcard="${i}"><div class="prico">${c.e}</div><div style="flex:1"><b>${esc(c.t)}</b></div><span class="ar">›</span></button>`).join('') +
+    ${RD_CARDS.some((c, i) => feat('rdcard' + i)) ? '<div class="exsub">🎁 कार्ड</div>' : ''}` +
+    RD_CARDS.map((c, i) => !feat('rdcard' + i) ? '' : `<button class="exrow" data-rdcard="${i}"><div class="prico">${c.e}</div><div style="flex:1"><b>${esc(c.t)}</b></div><span class="ar">›</span></button>`).join('') +
     `<div class="exsub">📋 मेरे हाल के रिडीम</div><div class="card">${recent}<button class="btn soft" id="rdAll" style="margin-top:10px">सारा रिडीम देखें</button></div></div>${navHTML('wallet')}`;
   bindNav(); $('back').onclick = () => go('wallet');
   $('rdAll').onclick = () => { walletTab = 'pending'; go('wallet'); };
