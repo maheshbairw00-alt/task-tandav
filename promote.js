@@ -1,4 +1,4 @@
-/* ---------- APP PROMOTE: वीडियो शेयर करें, Views पर Coins पाएँ (DEMO) ---------- */
+/* ---------- APP PROMOTE: वीडियो शेयर करें, Views पर Coins पाएँ ---------- */
 /* यह अलग फ़ाइल है। इसे index.html में app.js से पहले जोड़ना है (app2.js में कुछ चिपकाना नहीं)।
    DEMO: जमा किए पोस्ट फ़ोन में सेव होते हैं और "Admin मंज़ूर" बटन डेमो का है।
    असली ऐप में पोस्ट/स्क्रीनशॉट सर्वर पर जाएँगे, Admin Panel से मंज़ूरी होगी और Coins सर्वर देगा।
@@ -40,11 +40,10 @@ function viewPromote() {
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><a class="btn soft small" href="${esc(v.url)}" download>⬇ डाउनलोड</a><button class="btn soft small" data-prcap="${i}">📋 कैप्शन</button><button class="btn soft small" data-prshare="${i}">📤 शेयर</button></div></div>`).join('');
   const hist = u.promo.length ? u.promo.map(p => {
     const st = p.status === 'approved' ? ['', 'मंज़ूर · +' + p.coins + ' Coins'] : p.status === 'rejected' ? ['rj', 'नामंज़ूर'] : ['pn', 'जाँच में'];
-    return `<div class="qa"><div class="split"><b>${esc(p.platform)} · ${prFmt(p.views)} Views</b><span class="bd ${st[0]}">${esc(st[1])}</span></div><small>${esc(p.link)}</small>${p.note ? `<small>${esc(p.note)}</small>` : ''}${p.status === 'pending' && PR_DEMO_SELF ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="btn soft small" data-prok="${p.id}">डेमो: Admin मंज़ूर</button></div>` : ''}</div>`;
+    return `<div class="qa"><div class="split"><b>${esc(p.platform)} · ${prFmt(p.views)} Views</b><span class="bd ${st[0]}">${esc(st[1])}</span></div><small>${esc(p.link)}</small>${p.note ? `<small>${esc(p.note)}</small>` : ''}${p.status === 'pending' && PR_DEMO_SELF ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="btn soft small" data-prok="${p.id}">Admin मंज़ूर</button></div>` : ''}</div>`;
   }).join('') : '<div class="hint">अभी कोई पोस्ट जमा नहीं हुआ।</div>';
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>App Promote</b></div><span style="width:40px"></span></div>
-    <div class="demo-tag">DEMO: पोस्ट की असली जाँच और Coins Admin Panel/सर्वर के बाद होंगे। "डेमो: Admin मंज़ूर" सिर्फ़ टेस्ट के लिए है।</div>
     <div class="card" style="margin-bottom:12px"><b>Coins कैसे मिलेंगे</b>` +
     PR_TIERS.slice().reverse().map(t => `<div class="split" style="padding:8px 0;border-bottom:1px solid var(--line);font-size:14px"><span>${prFmt(t[0])}+ Views</span><b>${t[1]} Coins</b></div>`).join('') +
     `<div class="hint">${prFmt(PR_MIN_VIEWS)} से कम Views पर Coins नहीं। एक वीडियो/लिंक पर एक ही बार। रोज़ ज़्यादा से ज़्यादा ${PR_DAY_MAX} पोस्ट।</div></div>
@@ -92,5 +91,5 @@ function prDecide(id) {
   p.status = 'approved'; p.coins = c; p.tx = tx; p.note = '';
   u.coins += c; u.earned += c;
   u.ledger.unshift({ id: tx, type: 'App Promote', coins: c, at: now, ref: id });
-  api.saveUser(u); toast('+' + c + ' Coins मिले (डेमो)'); viewPromote();
+  api.saveUser(u); toast('+' + c + ' Coins मिले'); viewPromote();
 }

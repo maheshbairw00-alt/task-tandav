@@ -81,8 +81,7 @@ function viewQuiz() {
   if (qzPlay) return qzScreen();
   const u = tkUser();
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
-    <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Explore Tasks</small><b>Quiz Tasks</b></div><span style="width:40px"></span></div>
-    <div class="demo-tag">DEMO: Quiz के Coins असली नहीं हैं। असली ऐप में जवाब की जाँच सर्वर पर होगी।</div>` +
+    <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Explore Tasks</small><b>Quiz Tasks</b></div><span style="width:40px"></span></div>` +
     QUIZZES.map(q => { const d = tkDone(u, q.id); return `<div class="card" style="margin-bottom:10px"><div class="split"><div><b>${esc(q.title)}</b><br><small>${q.type} · ${q.qs.length} सवाल · पास: ${QUIZ_PASS}/${q.qs.length}</small></div><span class="bd ${d ? '' : 'pn'}">${d ? 'Reward Credited' : '+' + q.reward + ' Coins'}</span></div><button class="btn ${d ? 'soft' : 'primary'}" style="margin-top:10px" data-q="${q.id}" ${d ? 'disabled' : ''}>${d ? 'पूरा हो चुका ✓' : 'Start Task'}</button></div>`; }).join('') +
     `</div>${navHTML('tasks')}`;
   bindNav(); $('back').onclick = () => go('home');
@@ -114,7 +113,7 @@ function qzResult() {
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><div class="hi"><small>${esc(def.title)}</small><b>Quiz का नतीजा</b></div><span style="width:40px"></span></div>
     <div class="card" style="text-align:center"><div style="font-size:40px">${r.pass ? '🎉' : '😕'}</div><b style="font-size:20px">${r.score}/${def.qs.length} सही</b>
-      <div class="hint">${r.pass ? '✓ पास! +' + r.coins + ' Coins (डेमो) · Transaction ID: ' + esc(r.tx) : 'पास होने के लिए ' + QUIZ_PASS + ' सही जवाब चाहिए। इस बार Reward नहीं मिला।'}</div></div>
+      <div class="hint">${r.pass ? '✓ पास! +' + r.coins + ' Coins · Transaction ID: ' + esc(r.tx) : 'पास होने के लिए ' + QUIZ_PASS + ' सही जवाब चाहिए। इस बार Reward नहीं मिला।'}</div></div>
     <div class="card" style="margin-top:12px"><b>जवाब देखें</b>` +
     def.qs.map((q, n) => `<div class="qa"><b>${n + 1}. ${esc(q.q)}</b><small>आपका जवाब: ${esc(q.o[ans[n]])} ${ans[n] === q.a ? '✓' : '✗'}</small>${ans[n] === q.a ? '' : `<small>सही जवाब: ${esc(q.o[q.a])}</small>`}</div>`).join('') +
     `</div><button class="btn primary" id="again" style="margin-top:12px">${r.pass ? 'दूसरा Quiz' : 'फिर कोशिश करें'}</button><button class="btn soft" id="mytasks" style="margin-top:8px">My Tasks देखें</button></div>${navHTML('tasks')}`;
@@ -135,8 +134,7 @@ function viewReading() {
   if (rdPlay) return rdScreen();
   const u = tkUser();
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
-    <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Explore Tasks</small><b>Reading Tasks</b></div><span style="width:40px"></span></div>
-    <div class="demo-tag">DEMO: लेख पढ़ने का समय और जवाब फ़ोन में जाँचे जाते हैं। असली ऐप में सर्वर जाँचेगा।</div>` +
+    <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Explore Tasks</small><b>Reading Tasks</b></div><span style="width:40px"></span></div>` +
     ARTICLES.map(a => { const d = tkDone(u, a.id); return `<div class="card" style="margin-bottom:10px"><div class="split"><div><b>${esc(a.title)}</b><br><small>लेख + ${a.qs.length} सवाल · कम से कम ${TASKCFG.readSec} सेकंड पढ़ें</small></div><span class="bd ${d ? '' : 'pn'}">${d ? 'Reward Credited' : '+' + a.reward + ' Coins'}</span></div><button class="btn ${d ? 'soft' : 'primary'}" style="margin-top:10px" data-r="${a.id}" ${d ? 'disabled' : ''}>${d ? 'पूरा हो चुका ✓' : 'Start Task'}</button></div>`; }).join('') +
     `</div>${navHTML('tasks')}`;
   bindNav(); $('back').onclick = () => go('home');
@@ -181,7 +179,7 @@ function rdResult() {
   const r = rdPlay.result;
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><div class="hi"><small>${esc(rdPlay.def.title)}</small><b>Reading पूरा</b></div><span style="width:40px"></span></div>
-    <div class="card" style="text-align:center"><div style="font-size:40px">🎉</div><b style="font-size:18px">+${r.coins} Coins (डेमो)</b><div class="hint">Transaction ID: ${esc(r.tx)}</div></div>
+    <div class="card" style="text-align:center"><div style="font-size:40px">🎉</div><b style="font-size:18px">+${r.coins} Coins</b><div class="hint">Transaction ID: ${esc(r.tx)}</div></div>
     <button class="btn primary" id="again" style="margin-top:12px">दूसरा लेख</button><button class="btn soft" id="mytasks" style="margin-top:8px">My Tasks देखें</button></div>${navHTML('tasks')}`;
   bindNav(); $('again').onclick = rdLeave; $('mytasks').onclick = () => { rdPlay = null; go('tasks'); };
 }
@@ -223,7 +221,7 @@ function viewTasks() {
   $('tRew').onclick = () => { const r = all.filter(t => t.status === 'Reward Credited'); tkSheet('Reward History', 'सफलतापूर्वक क्रेडिट हुए Coins।', r.length ? r.map(t => `<div class="hrow"><div><b>${esc(t.name)}</b><br>${esc(t.type)} Tasks<br>${fdt(t.end)}<br>ID: ${esc(t.tx)}</div><div style="text-align:right"><b class="ok-t">+${t.coins} Coins</b></div></div>`).join('') : '<div class="sub">अभी कोई Reward नहीं मिला।</div>'); };
 }
 
-/* ---------- PLAY GAME + SUPER OFFER (DEMO) ---------- */
+/* ---------- PLAY GAME + SUPER OFFER ---------- */
 /* DEMO: Diamonds, गेम का नतीजा, Ad और Offer के चरण फ़ोन में ही जाँचे जाते हैं। असली ऐप में Diamonds, Ad देखने की पुष्टि (AdMob),
    Offer का Install/Use App सत्यापन (Offerwall/Advertiser), Screenshot की Admin मंज़ूरी और सारी सीमाएँ सर्वर (Firebase) पर होंगी।
    Diamond से जुड़ी खरीद के लिए Google Play Billing चाहिए। */
@@ -236,7 +234,7 @@ const SO_OFFER = { id: 'so_demo1', name: 'Demo App Offer', fee: 28, steps: [
   { k: 'use2', t: 'Use App', d: 'ऐप 5 मिनट और चलाएँ।', c: 472 },
   { k: 'use3', t: 'Use App', d: 'ऐप 5 मिनट और चलाएँ।', c: 811 }] };
 let gmPlay = null, gmTimer = null, soOpen = null;
-/* Task Partners: अभी सिर्फ़ बटन (डेमो)। हर Partner तभी चालू करें जब उसके साथ असली मंज़ूरी/Agreement हो जाए।
+/* Task Partners: अभी सिर्फ़ बटन। हर Partner तभी चालू करें जब उसके साथ असली मंज़ूरी/Agreement हो जाए।
    live: true करने पर "Get Now" उसका असली पेज (SDK/Offerwall) खोलेगा, वह कोड तब जोड़ा जाएगा। */
 const PLAY_PARTNERS = [
   { n: 'Offer Pro', e: '🎁', live: false }, { n: 'PubScale', e: '🚀', live: false }, { n: 'Torox', e: '🛡️', live: false },
@@ -263,7 +261,6 @@ function viewGame() {
     const n = gmToday(u);
     $('root').innerHTML = `<div class="page" style="padding-top:12px">
       <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Play Game!</small><b>Match & Win</b></div>${diaChip(u)}</div>
-      <div class="demo-tag">DEMO: गेम और 💎 फ़ोन में ही चलते हैं। असली Ad और सीमा सर्वर पर होंगी।</div>
       <div class="card" style="text-align:center"><div style="font-size:56px">🧩</div><b style="font-size:20px">Match & Win</b>
         <div class="hint">हर राउंड में एक निशान कुछ सेकंड दिखेगा। उसे याद रखें और फिर सही निशान चुनें। ${GM_ROUNDS} राउंड, पूरा होने पर 1 💎 (Ad देखने के बाद)।</div>
         <div class="hint">आज: ${n}/${GM_LIMIT} गेम</div>
@@ -306,7 +303,7 @@ function gmResult() {
   $('root').innerHTML = `<div class="page" style="padding-top:12px"><div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Match & Win</small><b>नतीजा</b></div>${diaChip(u)}</div>
     <div class="card" style="text-align:center"><div style="font-size:46px">🏆</div><b style="font-size:20px">Winner</b><div class="hint">Correct</div><div style="font-size:38px;font-weight:800">${g.ok}/${GM_ROUNDS}</div>
       <div style="margin:12px 0"><span class="dchip">💎 x1</span></div>
-      ${g.credited ? '<div class="ok-t">✓ 1 💎 आपके खाते में जुड़ गया (डेमो)</div>' : '<button class="btn primary" id="gmAd">▶ Watch Ad</button><div class="hint">Ad पूरा देखने पर 1 💎 मिलेगा।</div>'}
+      ${g.credited ? '<div class="ok-t">✓ 1 💎 आपके खाते में जुड़ गया</div>' : '<button class="btn primary" id="gmAd">▶ Watch Ad</button><div class="hint">Ad पूरा देखने पर 1 💎 मिलेगा।</div>'}
       <button class="btn soft" id="gmAgain" style="margin-top:10px">${gmToday(u) >= GM_LIMIT ? 'आज की सीमा पूरी' : 'फिर खेलें'}</button></div></div>${navHTML('home')}`;
   bindNav(); $('back').onclick = () => { gmPlay = null; go('home'); };
   $('gmAgain').disabled = gmToday(u) >= GM_LIMIT;
@@ -329,7 +326,7 @@ function gmWatchAd() {
     return;
   }
   let left = AD_SEC;
-  $('sheet').innerHTML = `<h3>Ad (डेमो)</h3><div class="sub">असली Ad नेटवर्क जुड़ने पर यहाँ Ad चलेगा।</div><div class="card" style="text-align:center"><div style="font-size:40px">📺</div><b id="adLeft">${left} सेकंड</b></div><div class="hint">Ad पूरा होने तक रुकें।</div>`;
+  $('sheet').innerHTML = `<h3>Ad</h3><div class="card" style="text-align:center"><div style="font-size:40px">📺</div><b id="adLeft">${left} सेकंड</b></div><div class="hint">Ad पूरा होने तक रुकें।</div>`;
   $('modal').classList.remove('hidden');
   const t = setInterval(() => {
     left--; if ($('adLeft')) $('adLeft').textContent = left + ' सेकंड';
@@ -393,7 +390,7 @@ function viewOffers() {
       o.steps.map((s, i) => {
         const d = SO_OFFER.steps[i], ok = soStepDone(s.st), lock = i > 0 && !soStepDone(o.steps[i - 1].st), cur = !ok && !lock;
         return `<div class="stp ${ok ? 'ok' : lock ? 'lock' : ''}"><div class="split"><div><b>${d.t}</b><br><small>${d.d}</small></div><div style="text-align:right"><b style="color:var(--amber-d)">${d.c} Coins</b><br><span class="bd ${ok ? '' : 'pn'}">${ok ? s.st : lock ? 'Locked' : s.st}</span></div></div>` +
-          (cur ? (d.proof ? (s.st === 'Pending Review' ? `<div class="hint">Screenshot जमा हो गया। Admin की मंज़ूरी का इंतज़ार (डेमो):</div><button class="btn soft" style="margin-top:8px" data-so="approve" data-k="${s.k}">Demo: Admin Approve</button>` : `<div class="hint">असली ऐप में यहाँ फ़ोटो अपलोड होगी।</div><button class="btn primary" style="margin-top:8px" data-so="step" data-k="${s.k}">Demo: Screenshot जमा करें</button>`) : `<button class="btn primary" style="margin-top:8px" data-so="step" data-k="${s.k}">Demo: चरण पूरा करें</button>`) : '') + '</div>';
+          (cur ? (d.proof ? (s.st === 'Pending Review' ? `<div class="hint">Screenshot जमा हो गया। Admin की मंज़ूरी का इंतज़ार:</div><button class="btn soft" style="margin-top:8px" data-so="approve" data-k="${s.k}">Demo: Admin Approve</button>` : `<div class="hint">असली ऐप में यहाँ फ़ोटो अपलोड होगी।</div><button class="btn primary" style="margin-top:8px" data-so="step" data-k="${s.k}">Demo: Screenshot जमा करें</button>`) : `<button class="btn primary" style="margin-top:8px" data-so="step" data-k="${s.k}">Demo: चरण पूरा करें</button>`) : '') + '</div>';
       }).join('') + `<div class="card" style="text-align:center;background:var(--amber);margin:12px 0"><small>Total Possible Rewards</small><br><b style="font-size:24px">${total} Coins</b></div><button class="btn soft" style="color:var(--danger)" id="soRemove">Remove Offer</button>`;
   } else {
     body = `<div class="card"><div class="split"><div class="hi"><small>Offers Completed</small><b style="font-size:24px">🏅 ${doneN}</b></div><button class="pill ghost" id="soHist">View History</button></div></div>
@@ -403,8 +400,7 @@ function viewOffers() {
       (act ? `<div class="sec"><h2>Pending Offers</h2><button class="trow" id="soPend"><div style="flex:1"><b>${esc(act.name)}</b><small>शुरू: ${fdt(act.start)}</small><div class="bar" style="margin:6px 0"><i style="width:${Math.round(act.steps.filter(s => soStepDone(s.st)).length / act.steps.length * 100)}%"></i></div><small>Progress: ${act.steps.filter(s => soStepDone(s.st)).length}/${act.steps.length} tasks</small></div><span>›</span></button></div>` : '') +
       ``;
   }
-  $('root').innerHTML = `<div class="page" style="padding-top:12px"><div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>Super Offers</b></div>${diaChip(u)}</div>
-    <div class="demo-tag">DEMO: Install, Use App और Screenshot की जाँच असली ऐप और Advertiser/Admin के बाद होगी। यहाँ बटन से चरण आगे बढ़ते हैं।</div>${body}</div>${navHTML('home')}`;
+  $('root').innerHTML = `<div class="page" style="padding-top:12px"><div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>Super Offers</b></div>${diaChip(u)}</div>${body}</div>${navHTML('home')}`;
   bindNav(); $('back').onclick = () => { if (soOpen) { soOpen = null; viewOffers(); } else go('home'); };
   if ($('soHist')) $('soHist').onclick = soHistory;
   if ($('soGo')) $('soGo').onclick = () => { if (soActive(u)) { soOpen = soActive(u).id; viewOffers(); } else soStart(); };
@@ -413,7 +409,7 @@ function viewOffers() {
   document.querySelectorAll('[data-so]').forEach(b => b.onclick = () => soDoStep(act.id, b.dataset.k, b.dataset.so === 'approve'));
 }
 
-/* ---------- DAILY MISSION: YouTube + Telegram बॉट (DEMO) ---------- */
+/* ---------- DAILY MISSION: YouTube + Telegram बॉट ---------- */
 /* DEMO: "मैंने कर लिया" को फ़ोन ही मानता है। असली ऐप में Subscribe/Join की जाँच और "एक ID को एक बार"
    की रोक सर्वर (Firebase + Telegram बॉट) पर होगी। नए Mission बाद में Admin Panel से जुड़ेंगे।
    लिंक या Coins बदलने हों, तो नीचे MISSIONS में बदलें। coins: 0 का मतलब सिर्फ़ खुलेगा, Coins नहीं। */
@@ -433,8 +429,7 @@ function viewMission() {
   clearInterval(msTimer);
   const u = msUser();
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
-    <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>Daily Mission</b></div><span style="width:40px"></span></div>
-    <div class="demo-tag">DEMO: "मैंने कर लिया" की असली जाँच बैकएंड के बाद होगी।</div>` +
+    <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>Daily Mission</b></div><span style="width:40px"></span></div>` +
     MISSIONS.map(m => {
       const done = !!u.missions[m.id];
       let act;
@@ -467,7 +462,7 @@ function msClaim(id) {
   u.missions[id] = { at: now, tx };
   u.coins += m.coins; u.earned += m.coins;
   u.ledger.unshift({ id: tx, type: 'Mission Reward', coins: m.coins, at: now, ref: id });
-  api.saveUser(u); toast('+' + m.coins + ' Coins मिले (डेमो)'); viewMission();
+  api.saveUser(u); toast('+' + m.coins + ' Coins मिले'); viewMission();
 }
 
 /* >>> इस पूरे कोड को app2.js में 'function openCal() {' वाली लाइन के ठीक ऊपर चिपकाएँ <<< */
@@ -501,7 +496,7 @@ function openCal() {
     const done = d <= u.streak; const today = !cs.claimedToday && d === cs.day;
     cells += `<div class="cell ${done ? 'done' : ''} ${today ? 'today' : ''}"><b>${d}</b>${done ? '✓' : (d > cs.day || (cs.claimedToday && d > u.streak)) ? '🔒' : ''}<br>${rewardForDay(d) + bonusForDay(d)}c</div>`;
   }
-  $('sheet').innerHTML = `<h3>365 दिन का Check-in</h3><div class="sub">आगे के दिन Locked रहते हैं। दिन छूटने पर Streak Day 1 से शुरू (डेमो नियम)।</div>
+  $('sheet').innerHTML = `<h3>365 दिन का Check-in</h3><div class="sub">आगे के दिन Locked रहते हैं। दिन छूटने पर Streak Day 1 से शुरू।</div>
     <div class="legend"><span>✓ Claimed</span><span>🔒 Locked</span></div><div class="cal">${cells}</div>
     <button class="btn soft" style="margin-top:14px" id="closeSheet">बंद करें</button>`;
   $('modal').classList.remove('hidden'); $('closeSheet').onclick = closeModal;

@@ -1,5 +1,5 @@
 /* >>> यह अलग फ़ाइल है: index.html में app.js से पहले इसकी <script> लाइन जोड़ें। app2.js में इसे चिपकाना नहीं है <<< */
-/* ---------- COLLEGE BOOSTER: नोट्स + अभ्यास + टेस्ट (DEMO) ---------- */
+/* ---------- COLLEGE BOOSTER: नोट्स + अभ्यास + टेस्ट ---------- */
 /* DEMO: जवाब और Coins की जाँच फ़ोन में होती है। असली ऐप में जवाब सर्वर पर रहेंगे और Coins सर्वर देगा।
    सवाल "अभ्यास के लिए" हैं, आधिकारिक परीक्षा के नहीं। सवाल/नोट्स exam-data.js और ch-*.js फ़ाइलों में हैं। */
 const EX_COIN_PRACTICE = 2;   // अभ्यास के 25 सवाल पूरे करने पर (हर अध्याय में एक बार)
@@ -41,8 +41,7 @@ function viewExam() {
   exStop();
   const u = exUser();
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
-    <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>College Booster</b></div><span style="width:40px"></span></div>
-    <div class="demo-tag">DEMO: ये सवाल सिर्फ़ अभ्यास के लिए हैं, आधिकारिक परीक्षा के नहीं। Coins असली नहीं हैं।</div>` +
+    <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>College Booster</b></div><span style="width:40px"></span></div>` +
     EXAM_SUB.map(s => {
       const list = EXAM_CH.filter(c => c.sub === s.id);
       if (!list.length) return '';
@@ -135,7 +134,7 @@ function exPracticeResult() {
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><div class="hi"><small>${esc(ch.title)}</small><b>अभ्यास पूरा</b></div><span style="width:40px"></span></div>
     <div class="card" style="text-align:center"><div style="font-size:40px">🎯</div><b style="font-size:20px">${score}/${total} सही</b>
-    <div class="hint">${credit.coins ? '✓ +' + credit.coins + ' Coins (डेमो) · ID: ' + esc(credit.tx) : esc(credit.note)}</div></div>
+    <div class="hint">${credit.coins ? '✓ +' + credit.coins + ' Coins · ID: ' + esc(credit.tx) : esc(credit.note)}</div></div>
     <button class="btn primary" id="exT2" style="margin-top:12px">अब टेस्ट दें 🏁</button>
     <button class="btn soft" id="exBk" style="margin-top:8px">अध्याय पर लौटें</button></div>${navHTML('home')}`;
   bindNav();
@@ -179,7 +178,7 @@ function exTestResult() {
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><div class="hi"><small>${esc(ch.title)}</small><b>टेस्ट का नतीजा</b></div><span style="width:40px"></span></div>
     <div class="card" style="text-align:center"><div style="font-size:40px">${r.pass ? '🎉' : '😕'}</div><b style="font-size:20px">${r.score}/${total} सही (${r.pct}%)</b>
-    <div class="hint">${r.credit.coins ? '✓ पास! +' + r.credit.coins + ' Coins (डेमो) · ID: ' + esc(r.credit.tx) : esc(r.credit.note)}</div></div>
+    <div class="hint">${r.credit.coins ? '✓ पास! +' + r.credit.coins + ' Coins · ID: ' + esc(r.credit.tx) : esc(r.credit.note)}</div></div>
     <div class="card" style="margin-top:12px"><b>जवाब और कारण</b>` +
     ord.map((qi, n) => { const q = ch.qs[qi], ok = ans[n] === q.a; return `<div class="qa"><b>${n + 1}. ${esc(q.q)}</b><small>आपका जवाब: ${ans[n] === undefined ? 'छोड़ा' : esc(q.o[ans[n]])} ${ok ? '✓' : '✗'}</small>${ok ? '' : `<small>सही जवाब: ${esc(q.o[q.a])}</small>`}<small>${esc(q.w)}</small></div>`; }).join('') +
     `</div><button class="btn primary" id="exAg" style="margin-top:12px">फिर से टेस्ट दें</button><button class="btn soft" id="exBk" style="margin-top:8px">अध्याय पर लौटें</button></div>${navHTML('home')}`;

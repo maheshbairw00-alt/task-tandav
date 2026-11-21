@@ -151,7 +151,6 @@ function viewRegister() {
   $('root').innerHTML = `
   <div class="auth">
     <div class="brand"><div class="logo">⚡</div><h1>Task Tandav</h1><p>फ्री अकाउंट बनाएँ</p></div>
-    <div class="demo-tag">DEMO मोड: असली SMS नहीं जाता। OTP नीचे स्क्रीन पर दिखेगा।</div>
     <form class="card" id="f" novalidate>
       <div class="field"><label>पूरा नाम (Full Name)</label><input id="name" autocomplete="name" placeholder="जैसे: Rahul Sharma"><div class="err" id="e_name"></div></div>
       <div class="field"><label>Username</label><input id="uname" autocapitalize="none" placeholder="rahul_01"><div class="err" id="e_uname"></div></div>
@@ -221,7 +220,6 @@ function viewLogin() {
   $('root').innerHTML = `
   <div class="auth">
     <div class="brand"><div class="logo">⚡</div><h1>Task Tandav</h1><p>वापसी पर स्वागत है</p></div>
-    <div class="demo-tag">DEMO मोड: डेटा सिर्फ़ इसी फ़ोन में सेव है।</div>
     <form class="card" id="f" novalidate>
       <div class="field"><label>मोबाइल नंबर</label><div class="row"><span class="prefix">+91</span><input id="mobile" inputmode="numeric" maxlength="10" placeholder="Registered नंबर"></div></div>
       <div class="field"><label>पासवर्ड</label><input id="pw" type="password" autocomplete="current-password"><div class="err" id="e"></div></div>
@@ -270,7 +268,6 @@ function viewHome() {
   const first = u.name.split(' ')[0];
 
   $('root').innerHTML = `
-  <div class="demo-bar">DEMO मोड · दिखने वाले कॉइन असली नहीं हैं</div>
   <div class="page">
   <div class="top">
     <div class="hi"><small>नमस्ते 👋</small><b>${esc(first)}</b></div>
@@ -335,7 +332,7 @@ function viewHome() {
   $('claim').onclick = () => {
     const r = api.claimCheckin();
     if (!r.ok) return toast(r.msg);
-    toast('Day ' + r.day + ': +' + r.coins + ' Coins' + (r.bonus ? ' + ' + r.bonus + ' बोनस' : '') + ' (डेमो)'); viewHome();
+    toast('Day ' + r.day + ': +' + r.coins + ' Coins' + (r.bonus ? ' + ' + r.bonus + ' बोनस' : '') + ''); viewHome();
   };
   $('cal').onclick = (e) => { e.preventDefault(); openCal(); };
   $('startCaptcha').onclick = () => go('captcha');
@@ -389,7 +386,6 @@ function viewCaptcha() {
   $('root').innerHTML = `
   <div class="page" style="padding-top:12px">
     <div class="top"><button class="ic" id="back">←</button><div class="hi"><b>CAPTCHA Task</b></div><span style="width:40px"></span></div>
-    <div class="demo-tag">DEMO: हर सही जवाब पर ${CAP_REWARD} Coin (असली राशि Admin तय करेगा)</div>
     <div class="card">
       <div class="split"><div><b id="cnt"></b><br><small id="earn"></small></div><div style="text-align:right"><small>कुल Coins</small><br><b id="tot"></b></div></div>
       <div class="bar"><i id="fill"></i></div>
@@ -511,7 +507,7 @@ function tabPending(u) {
   const kv = (k, v) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`;
   return list.map(w => `<div class="card" style="margin-bottom:10px"><div class="split"><b>₹${w.amount}</b><span class="bd ${bdc(w.status)}">${w.status}</span></div>` +
     kv('Request ID', esc(w.id)) + kv('Required Coins', w.coins.toLocaleString('en-IN')) + kv('Request Date/Time', fdt(w.at)) + kv('Payment Method', esc(w.dest)) + kv('Last Updated', fdt(w.upd)) +
-    (w.status === 'Pending' ? `<button class="btn soft" style="margin-top:10px" data-cancel="${esc(w.id)}">Request रद्द करें (DEMO)</button>` : '') + `</div>`).join('') +
+    (w.status === 'Pending' ? `<button class="btn soft" style="margin-top:10px" data-cancel="${esc(w.id)}">Request रद्द करें</button>` : '') + `</div>`).join('') +
     '';
 }
 function tabPayment(u) {
@@ -579,7 +575,6 @@ function viewWallet() {
   const body = walletTab === 'history' ? tabHistory(u) : walletTab === 'pending' ? tabPending(u) : tabPayment(u);
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><div class="hi"><small>Task Tandav</small><b>Redeem</b></div><span style="width:40px"></span></div>
-    <div class="demo-tag">DEMO: ये Coins असली नहीं हैं और कोई असली भुगतान नहीं होगा।</div>
     <div class="wallet"><small>Available Coins</small><div class="bal">${u.coins.toLocaleString('en-IN')}</div><div class="inr">≈ ₹${(u.coins / 100).toFixed(2)} &nbsp;·&nbsp; 100 Coins = ₹1</div>
       <div class="mini"><span>कुल रिवॉर्ड: ${u.earned.toLocaleString('en-IN')}</span><span>Pending: ${pend.toLocaleString('en-IN')} Coins</span></div>
       <div class="btns"><button class="w" id="wdBtn">Redeem</button></div></div>
@@ -710,7 +705,7 @@ function prfLang() {
 /* STEP G: Help & Support */
 function prfSupport() {
   const u = prfUser();
-  prfSheet(`<h3>Help & Support</h3><div class="sub">UPI PIN, Password या OTP कभी न लिखें। DEMO: Ticket अभी सिर्फ़ आपके फ़ोन में सेव होता है, Admin तक नहीं पहुँचता।</div>
+  prfSheet(`<h3>Help & Support</h3><div class="sub">UPI PIN, Password या OTP कभी न लिखें।</div>
     <div class="field"><label>Issue Category</label><select id="sCat">${PRF_CATS.map(c => `<option>${c}</option>`).join('')}</select></div>
     <div class="field"><label>Subject</label><input id="sSub" maxlength="80"></div>
     <div class="field"><label>Describe Your Problem</label><textarea id="sDes" maxlength="500"></textarea></div>
@@ -751,7 +746,7 @@ function prfTerms() {
 function prfAbout() {
   const mail = (typeof APP_SUPPORT_EMAIL !== 'undefined' && APP_SUPPORT_EMAIL) ? APP_SUPPORT_EMAIL : '';
   const lnk = (t, url) => `<a class="btn soft" style="display:block;text-align:center;text-decoration:none;margin-top:8px" href="${url}" target="_blank" rel="noopener">${t}</a>`;
-  prfSheet(`<h3>About Task Tandav</h3>` + prfKV('App Name', 'Task Tandav') + prfKV('App Version', '0.1 (DEMO)') +
+  prfSheet(`<h3>About Task Tandav</h3>` + prfKV('App Name', 'Task Tandav') + prfKV('App Version', '0.1') +
     (mail ? prfKV('Contact', esc(mail)) : '') + prfKV('Copyright', '© ' + new Date().getFullYear() + ' Task Tandav. सर्वाधिकार सुरक्षित।') +
     lnk('YouTube चैनल', 'https://www.youtube.com/@SuperPro-k5o') + lnk('Telegram', 'https://t.me/Superpro_1Fast_Bot') +
     (mail ? lnk('ईमेल भेजें', 'mailto:' + encodeURIComponent(mail).replace('%40', '@')) : ''));
@@ -820,7 +815,6 @@ function viewCommunity() {
   const feed = list.map((p, i) => cmCard(p, u, posts)).join('') || '<div class="sub" style="text-align:center;padding:24px">अभी कोई पोस्ट नहीं। पहली पोस्ट आप डालें!</div>';
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><div class="hi"><small>Task Tandav</small><b>Community</b></div><span style="width:40px"></span></div>
-    <div class="demo-tag">DEMO: पोस्ट सिर्फ़ इसी फ़ोन में सेव होती हैं। असली Community बैकएंड के बाद।</div>
     <div class="card"><b>👋 Community में स्वागत है</b><div class="hint">अपने विचार और फ़ोटो साझा करें। Like, Comment या Share के बदले Coins नहीं मिलते।</div></div>
     <div class="sec" style="margin-top:14px"><h2>📢 Announcements</h2><div class="card"><small>अभी कोई Announcement नहीं। Official Updates Admin Panel से यहाँ दिखेंगी।</small></div></div>
     <div class="sec"><h2>नई पोस्ट</h2><div class="card">

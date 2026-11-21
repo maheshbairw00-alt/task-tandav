@@ -109,7 +109,6 @@ function viewLogin() {
       <div class="err" id="gerr" style="margin-top:10px;text-align:center"></div>
       <div class="hint" style="margin-top:12px;text-align:center">हम सिर्फ़ आपका नाम, ईमेल और फ़ोटो लेते हैं। Google का पासवर्ड हमें कभी नहीं मिलता।</div>
     </div>
-    <div class="demo-tag" style="margin-top:14px">अभी टेस्टिंग चरण: Coins और डेटा इसी फ़ोन में सेव हैं।</div>
   </div>`;
   $('gterms').onchange = () => { $('gwait').style.display = $('gterms').checked ? 'none' : ''; auDraw(); };
 }

@@ -36,7 +36,6 @@ function viewRedeem() {
   const recent = u.withdrawals.slice(0, 3).map(w => `<div class="qa"><div class="split"><b>₹${w.amount} · ${esc(w.dest)}</b><span class="bd ${bdc(w.status)}">${esc(w.status)}</span></div><small>${fdt(w.at)}</small></div>`).join('') || '<div class="hint">अभी कोई निकासी नहीं।</div>';
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>Redeem</b></div><span style="width:40px"></span></div>
-    <div class="demo-tag">DEMO: असली भुगतान और Coins की जाँच सर्वर/Admin Panel के बाद होगी।</div>
     <div class="card" style="margin-bottom:12px"><div class="split"><div><small>आपके Coins</small><div style="font-size:24px;font-weight:800">🪙 ${u.coins.toLocaleString('en-IN')}</div><small>≈ ₹${(u.coins / RD_COINS_PER_RS).toFixed(2)}</small></div>
       <div style="text-align:right"><small>${RD_WINDOW_HR} घंटे में रिडीम</small><div style="font-size:20px;font-weight:800">${left}/${RD_MAX_REQ} बची</div></div></div>
       ${blocked ? `<div class="exwhy bad">आज की सीमा पूरी हो गई। अगला रिडीम ${esc(rdNextText(cnt))} बाद कर सकेंगे।</div>` : ''}</div>
