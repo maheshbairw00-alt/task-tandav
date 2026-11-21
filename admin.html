@@ -86,6 +86,8 @@ async function load() {
   notes = []; try { const s = await db.collection('notifications').orderBy('at', 'desc').limit(30).get(); s.forEach(d => notes.push(Object.assign({ _id: d.id }, d.data()))); } catch (e) {}
   tcfg = { items: [], disabled: [] }; try { const d = await db.collection('appSettings').doc('tasks').get(); if (d.exists) { tcfg.items = JSON.parse(d.data().items || '[]'); tcfg.disabled = d.data().disabled || []; } } catch (e) {}
   cfg = {}; try { const d = await db.collection('appSettings').doc('main').get(); if (d.exists) cfg = d.data(); } catch (e) {}
+  fbRows = []; try { const s2 = await db.collection('feedback').orderBy('at', 'desc').limit(50).get(); s2.forEach(d => fbRows.push(Object.assign({ _id: d.id }, d.data()))); } catch (e) {}
+  featCfg = {}; try { const d = await db.collection('appSettings').doc('features').get(); if (d.exists) featCfg = d.data().f || {}; } catch (e) {}
   paint();
 }
 const tabNow = () => (location.hash || '#home').slice(1).split('/')[0];
@@ -272,9 +274,9 @@ function pWd() {
 /* ---------- MORE ---------- */
 function pMore() {
   const sub = (location.hash.split('/')[1] || '');
-  const P = { promo: pPromo, logs: pLogs, coins: pCoins, notif: pNotif, report: pReport, settings: pSettings, profile: pProfile }[sub]; if (P) return P();
+  const P = { promo: pPromo, logs: pLogs, coins: pCoins, notif: pNotif, fb: pFeedback, report: pReport, settings: pSettings, profile: pProfile }[sub]; if (P) return P();
   const item = (ic, t, d, h) => `<a href="#more/${h}" style="text-decoration:none;color:inherit"><div class="card sp"><div><b>${ic} ${t}</b><div class="m">${d}</div></div><span class="tag">खोलें</span></div></a>`;
-  $('view').innerHTML = item('📣', 'Promotions', 'यूज़र के पोस्ट जाँचें', 'promo') + item('🪙', 'Coins और Rewards', 'Leaderboard, Referral, दरें', 'coins') + item('🔔', 'Notifications', 'यूज़र को संदेश भेजें', 'notif') + item('📊', 'Reports', 'तारीख़ से रिपोर्ट, चार्ट, CSV', 'report') +
+  $('view').innerHTML = item('📣', 'Promotions', 'यूज़र के पोस्ट जाँचें', 'promo') + item('🪙', 'Coins और Rewards', 'Leaderboard, Referral, दरें', 'coins') + item('🔔', 'Notifications', 'यूज़र को संदेश भेजें', 'notif') + item('💬', 'Feedback', 'यूज़र का Feedback मंज़ूर करें (' + fbRows.filter(f => f.status === 'pending').length + ' बाकी)', 'fb') + item('📊', 'Reports', 'तारीख़ से रिपोर्ट, चार्ट, CSV', 'report') +
     item('🛡️', 'Security और Admin Logs', 'हर कार्रवाई का रिकॉर्ड', 'logs') + item('⚙️', 'App Settings', 'Maintenance वगैरह', 'settings') + item('👤', 'Admin Profile', esc(me.email), 'profile') +
     `<div class="card"><div class="row" style="margin:0"><button class="btn bad" id="out">बाहर निकलें (Logout)</button></div></div>`;
   $('out').onclick = () => firebase.auth().signOut();
@@ -301,12 +303,31 @@ function pCoins() {
   <h2>🤝 Referral हिसाब</h2><div class="card">${rk.map(k => { const owner = rows.find(r => r.u.refCode === k); return `<div class="act"><i>${ref[k]}</i><div><b>${esc(k)}</b>${owner ? ' · ' + esc(owner.u.name) : ' · <span class="tag bad">अमान्य Code</span>'}<div class="m">${ref[k]} यूज़र जुड़े</div></div></div>`; }).join('') || `<div class="m">अभी किसी यूज़र में "किसने बुलाया" दर्ज नहीं है। (Referral Code ${codes} यूज़र के पास है, पर ऐप में Code भरने का खाना अभी नहीं जोड़ा गया, इसलिए गिनती शून्य है।)</div>`}</div>
   <h2>📐 मौजूदा दरें (ऐप के कोड में तय, यहाँ सिर्फ़ दिखाई गई)</h2><div class="card"><div>${COINS_PER_RS} Coins = ₹1</div><div class="m">प्रमोशन: ${PR_TIERS.slice().reverse().map(t => t[0] + '+ Views → ' + t[1] + ' Coins').join(' · ')}</div><div class="m">दरें बदलने के लिए ऐप का कोड बदलना होगा। पैनल से बदलने का बटन नहीं दिया।</div></div>`;
 }
+let ntMode = 'all', fbRows = [];
 function pNotif() {
-  $('view').innerHTML = back + `<div class="card"><b>🔔 नया संदेश</b><div class="m">यूज़र के ऐप खोलने पर एक बार दिखेगा। (Push अभी नहीं, वह Blaze प्लान पर आएगा।)</div>
+  $('view').innerHTML = back + `<div class="card"><b>🔔 नया संदेश</b><div class="m">यूज़र के Notifications पेज में दिखेगा और घंटी पर लाल बिंदु आएगा। (Push अभी नहीं।)</div>
+  <div class="row"><button class="btn ${ntMode === 'all' ? '' : 'soft'} sm" id="nmAll">सभी यूज़र को</button><button class="btn ${ntMode === 'one' ? '' : 'soft'} sm" id="nmOne">एक यूज़र को</button></div>
+  ${ntMode === 'one' ? '<input type="text" id="nu" placeholder="यूज़र की User ID (जैसे TT1234)" style="margin-top:8px">' : ''}
   <input type="text" id="nt" placeholder="शीर्षक" style="margin-top:8px"><input type="text" id="nb" placeholder="संदेश" style="margin-top:8px"><div class="row"><button class="btn" id="nsend">भेजें</button></div></div>
-  <h2>भेजे गए</h2>` + (notes.map(n => `<div class="card"><div class="sp"><b>${esc(n.title)}</b><button class="btn bad sm" data-nd="${esc(n._id)}">हटाएँ</button></div><div>${esc(n.body)}</div><div class="m">${fdt(n.at)}</div></div>`).join('') || '<div class="card m">कुछ नहीं भेजा।</div>');
-  $('nsend').onclick = async () => { const t = $('nt').value.trim(), b = $('nb').value.trim(); if (t.length < 3 || b.length < 3) return alert('शीर्षक और संदेश लिखें।'); if (!confirm('सभी यूज़र को भेजें?')) return;
-    try { const at = new Date().toISOString(); await db.collection('notifications').add({ title: t.slice(0, 80), body: b.slice(0, 300), at, admin: me.email }); await logA('Notification भेजा', t, b); await load(); } catch (e) { alert('नहीं हुआ: ' + (e.code || e.message) + '\nRules अपडेट किए?'); } };
+  <h2>सबको भेजे गए</h2>` + (notes.map(n => `<div class="card"><div class="sp"><b>${esc(n.title)}</b><button class="btn bad sm" data-nd="${esc(n._id)}">हटाएँ</button></div><div>${esc(n.body)}</div><div class="m">${fdt(n.at)}</div></div>`).join('') || '<div class="card m">कुछ नहीं भेजा।</div>');
+  $('nmAll').onclick = () => { ntMode = 'all'; pNotif(); };
+  $('nmOne').onclick = () => { ntMode = 'one'; pNotif(); };
+  $('nsend').onclick = async () => {
+    const t = $('nt').value.trim(), b = $('nb').value.trim(); if (t.length < 3 || b.length < 3) return alert('शीर्षक और संदेश लिखें।');
+    const at = new Date().toISOString();
+    try {
+      if (ntMode === 'one') {
+        const id = ($('nu').value || '').trim().toLowerCase(); const r = rows.find(x => String(x.u.id || '').toLowerCase() === id);
+        if (!r) return alert('यह User ID नहीं मिली।');
+        if (!confirm(r.u.name + ' (' + r.u.id + ') को भेजें?')) return;
+        await db.collection('users').doc(r.id).collection('notes').add({ title: t.slice(0, 80), body: b.slice(0, 300), at, admin: me.email });
+        await logA('निजी Notification भेजा', r.u.id, t); alert('भेज दिया।'); $('nt').value = ''; $('nb').value = '';
+      } else {
+        if (!confirm('सभी यूज़र को भेजें?')) return;
+        await db.collection('notifications').add({ title: t.slice(0, 80), body: b.slice(0, 300), at, admin: me.email }); await logA('Notification भेजा', t, b); await load();
+      }
+    } catch (e) { alert('नहीं हुआ: ' + (e.code || e.message) + '\nRules अपडेट किए?'); }
+  };
   document.querySelectorAll('[data-nd]').forEach(x => x.onclick = async () => { if (!confirm('हटाएँ?')) return; try { await db.collection('notifications').doc(x.dataset.nd).delete(); await logA('Notification हटाया', x.dataset.nd, ''); await load(); } catch (e) { alert('नहीं हुआ: ' + (e.code || e.message)); } });
 }
 function dayKey(s) { return String(s || '').slice(0, 10); }
@@ -339,11 +360,31 @@ function pLogs() {
   <h2>🛡️ Admin Logs (ताज़ा 200)</h2><input type="search" id="lq" placeholder="खोजें" value="${esc(logQ)}"><div class="card">` + (fl.map(l => `<div class="act"><i>🛡️</i><div><b>${esc(l.action)}</b> · ${esc(l.target || '')}<div class="m">${esc(l.detail || '')}</div><div class="m">${fdt(l.at)} · ${esc(l.admin || '')}</div></div></div>`).join('') || '<div class="m">कोई रिकॉर्ड नहीं। (Rules में adminLogs वाला हिस्सा लगाने के बाद दिखेगा।)</div>') + '</div>';
   $('lq').oninput = (e) => { logQ = e.target.value; const p = e.target.selectionStart; pLogs(); const n = $('lq'); n.focus(); n.setSelectionRange(p, p); };
 }
+let featCfg = {};
+const FEAT_LIST = [['more0','Paid Surveys'],['more1','App Testing'],['more2','Website Reviews'],['more3','Mini Freelance Jobs'],['more4','Shopping Cashback'],['more5','Local Business Leads'],['more6','Sponsored Campaigns'],['more7','Business के लिए'],['more8','Watch & Get Rewards'],['more9','Daily Poll'],['survey','Survey (Explore Tasks में)'],['offerwall','Offerwall (Explore Tasks में)'],['offers','Offers की पट्टी (App Install, Game, Shopping...)'],['promote','App Promote']];
+function pFeedback() {
+  $('view').innerHTML = back + '<h2>💬 Feedback (ताज़ा 50)</h2>' + (fbRows.map(f => `<div class="card"><div class="sp"><b>${esc(f.name || '')} · ${esc(f.uid2 || '')}</b><span class="tag ${f.status === 'approved' ? 'ok' : f.status === 'rejected' ? 'bad' : ''}">${esc(f.status)}</span></div>
+    <div class="m">${'★'.repeat(f.rating || 0)}${'☆'.repeat(5 - (f.rating || 0))} · ${fdt(f.at)}</div>
+    <div><b>अच्छा:</b> ${esc(f.good || '-')}</div><div><b>सुधार:</b> ${esc(f.bad || '-')}</div>
+    ${f.status === 'pending' ? `<div class="row"><button class="btn ok sm" data-fa="${esc(f._id)}">मंज़ूर (10 Coins)</button><button class="btn bad sm" data-fr="${esc(f._id)}">नामंज़ूर</button></div>` : ''}</div>`).join('') || '<div class="card m">अभी कोई Feedback नहीं।</div>');
+  const setS = async (id, status, note) => { try { await db.collection('feedback').doc(id).update({ status, note: note || '', admin: me.email, adminAt: new Date().toISOString() }); await logA('Feedback ' + status, id, note || ''); await load(); } catch (e) { alert('नहीं हुआ: ' + (e.code || e.message) + '\nRules अपडेट किए?'); } };
+  document.querySelectorAll('[data-fa]').forEach(b => b.onclick = () => { if (confirm('मंज़ूर करें? यूज़र को 10 Coins मिलेंगे।')) setS(b.dataset.fa, 'approved'); });
+  document.querySelectorAll('[data-fr]').forEach(b => b.onclick = () => { const n = prompt('कारण (यूज़र को दिखेगा):', ''); if (n !== null) setS(b.dataset.fr, 'rejected', n.slice(0, 120)); });
+}
 function pSettings() {
   const on = !!cfg.maintenance;
   $('view').innerHTML = back + `<div class="card"><div class="sp"><b>🛠️ Maintenance Mode</b><span class="tag ${on ? 'bad' : 'ok'}">${on ? 'चालू' : 'बंद'}</span></div><div class="m">चालू करने पर ऐप खोलने वालों को नीचे का संदेश दिखेगा और ऐप रुक जाएगा।</div>
   <input type="text" id="mm" style="margin-top:8px" placeholder="संदेश" value="${esc(cfg.msg || 'ऐप में सुधार का काम चल रहा है। थोड़ी देर बाद आएँ।')}"><div class="row"><button class="btn ${on ? 'ok' : 'bad'}" id="mt">${on ? 'बंद करें' : 'चालू करें'}</button></div></div>
+  <div class="card"><b>ऐप के फ़ीचर (चालू/बंद)</b><div class="m">बंद फ़ीचर ऐप में दिखता ही नहीं। जो तैयार हो जाए, उसे यहाँ से चालू करें। यूज़र के ऐप में कुछ देर या दोबारा खोलने पर बदलाव दिखता है।</div>
+  ${FEAT_LIST.map(([k, n]) => `<div class="sp" style="margin-top:8px"><span>${esc(n)}</span><button class="btn ${featCfg[k] ? 'ok' : 'bad'} sm" data-ft="${k}">${featCfg[k] ? 'चालू' : 'बंद'}</button></div>`).join('')}</div>
   <div class="card"><b>सिर्फ़ जानकारी</b><div class="m">${COINS_PER_RS} Coins = ₹1 · प्रमोशन न्यूनतम ${PR_MIN_VIEWS} Views · Admin ईमेल सूची और निकासी की दरें कोड/Rules में तय हैं।</div></div>`;
+  document.querySelectorAll('[data-ft]').forEach(b => b.onclick = async () => {
+    const k = b.dataset.ft, nv = !featCfg[k], nm = (FEAT_LIST.find(x => x[0] === k) || [])[1] || k;
+    if (!confirm(nm + (nv ? ' चालू करें?' : ' बंद करें?'))) return;
+    const f = Object.assign({}, featCfg); f[k] = nv;
+    try { await db.collection('appSettings').doc('features').set({ f, at: new Date().toISOString(), admin: me.email }); await logA(nv ? 'फ़ीचर चालू' : 'फ़ीचर बंद', nm, ''); await load(); }
+    catch (e) { alert('नहीं हुआ: ' + (e.code || e.message)); }
+  });
   $('mt').onclick = async () => { const msg = $('mm').value.trim().slice(0, 200) || 'ऐप में सुधार का काम चल रहा है।'; if (!confirm(on ? 'Maintenance बंद करें?' : 'Maintenance चालू करें? सभी यूज़र रुक जाएँगे।')) return;
     try { await db.collection('appSettings').doc('main').set({ maintenance: !on, msg, at: new Date().toISOString(), admin: me.email }); await logA(on ? 'Maintenance बंद' : 'Maintenance चालू', '', msg); await load(); } catch (e) { alert('नहीं हुआ: ' + (e.code || e.message) + '\nRules अपडेट किए?'); } };
 }
