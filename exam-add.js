@@ -96,7 +96,6 @@ function exAdScreen() {
   let left = EX_AD_SEC;
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><div class="hi"><small>College Booster</small><b>थोड़ा विराम</b></div><span style="width:40px"></span></div>
-    <div class="ad" style="padding:40px 18px"><b>ADVERTISEMENT (डेमो)</b>असली Ad Network जुड़ने पर यहाँ विज्ञापन दिखेगा</div>
     <button class="btn primary" id="exAdGo" disabled style="margin-top:12px">रुकें… ${left} सेकंड</button></div>${navHTML('home')}`;
   bindNav();
   exStop();
@@ -137,7 +136,6 @@ function exPracticeResult() {
     <div class="top"><div class="hi"><small>${esc(ch.title)}</small><b>अभ्यास पूरा</b></div><span style="width:40px"></span></div>
     <div class="card" style="text-align:center"><div style="font-size:40px">🎯</div><b style="font-size:20px">${score}/${total} सही</b>
     <div class="hint">${credit.coins ? '✓ +' + credit.coins + ' Coins (डेमो) · ID: ' + esc(credit.tx) : esc(credit.note)}</div></div>
-    <div class="sec" style="margin-top:12px"><div class="ad"><b>ADVERTISEMENT</b>बैनर विज्ञापन की जगह (Ad Network जुड़ने पर)</div></div>
     <button class="btn primary" id="exT2" style="margin-top:12px">अब टेस्ट दें 🏁</button>
     <button class="btn soft" id="exBk" style="margin-top:8px">अध्याय पर लौटें</button></div>${navHTML('home')}`;
   bindNav();
@@ -182,7 +180,6 @@ function exTestResult() {
     <div class="top"><div class="hi"><small>${esc(ch.title)}</small><b>टेस्ट का नतीजा</b></div><span style="width:40px"></span></div>
     <div class="card" style="text-align:center"><div style="font-size:40px">${r.pass ? '🎉' : '😕'}</div><b style="font-size:20px">${r.score}/${total} सही (${r.pct}%)</b>
     <div class="hint">${r.credit.coins ? '✓ पास! +' + r.credit.coins + ' Coins (डेमो) · ID: ' + esc(r.credit.tx) : esc(r.credit.note)}</div></div>
-    <div class="sec" style="margin-top:12px"><div class="ad"><b>ADVERTISEMENT</b>बैनर विज्ञापन की जगह (Ad Network जुड़ने पर)</div></div>
     <div class="card" style="margin-top:12px"><b>जवाब और कारण</b>` +
     ord.map((qi, n) => { const q = ch.qs[qi], ok = ans[n] === q.a; return `<div class="qa"><b>${n + 1}. ${esc(q.q)}</b><small>आपका जवाब: ${ans[n] === undefined ? 'छोड़ा' : esc(q.o[ans[n]])} ${ok ? '✓' : '✗'}</small>${ok ? '' : `<small>सही जवाब: ${esc(q.o[q.a])}</small>`}<small>${esc(q.w)}</small></div>`; }).join('') +
     `</div><button class="btn primary" id="exAg" style="margin-top:12px">फिर से टेस्ट दें</button><button class="btn soft" id="exBk" style="margin-top:8px">अध्याय पर लौटें</button></div>${navHTML('home')}`;

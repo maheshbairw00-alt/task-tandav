@@ -1,0 +1,74 @@
+/* ---------- थीम C: गहरा नीला-बैंगनी + सुनहरा ---------- */
+:root{
+  --bg:#12141f;--card:#1c2030;--card2:#232841;
+  --blue:#f5b942;--blue-soft:rgba(245,185,66,.14);
+  --lav:#262a45;--lav-d:#f5b942;
+  --mint:rgba(53,208,160,.15);--mint-d:#35d0a0;
+  --amber:rgba(245,185,66,.14);--amber-d:#f5b942;
+  --text:#eceefa;--muted:#9aa2c8;--line:#2b3048;--danger:#ff6b70;
+  --shadow:0 6px 20px rgba(0,0,0,.35);--gold:#f5b942;--hero:linear-gradient(135deg,#2d2f6b,#4b2f8a);
+}
+html,body{background:var(--bg);color:var(--text);color-scheme:dark}
+.app{background:var(--bg)}
+/* कार्ड और बटन की सतहें */
+.ic,.tile,.chip,.nav,.sheet,.trow,.fchips button,.menu,.mrow,.gopt,.stp,.pcard,.mcard,.exrow,.rdc,.gbtn,.card{background:var(--card)}
+.ic{color:var(--text)}
+.nav{border-top:1px solid var(--line)}
+.nav button.on{color:var(--gold)}
+.mrow,.trow,.exrow,.gbtn,.tile,.chip,.mcard,.rdc,.pcard{color:var(--text)}
+.field input,.field select,.field textarea,#ans{background:#151827;color:var(--text);border-color:var(--line)}
+.field input:focus,.field select:focus,.field textarea:focus,#ans:focus{background:#151827;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,185,66,.18)}
+.field input:disabled{background:#1a1d2c;color:var(--muted)}
+.field input::placeholder,.field textarea::placeholder{color:#6d7499}
+.row .prefix{color:var(--gold)}
+.seg{background:#151827}
+.seg button{color:var(--muted);background:transparent}
+.seg button.on{background:var(--card2);color:var(--gold)}
+.cell{background:var(--card2);color:var(--muted)}
+.capwrap{background:var(--card2)}
+.ad{background:var(--card2);border-color:var(--line)}
+.stat div{background:var(--card2)}
+.toast{background:#2b3048;color:var(--text);border:1px solid var(--line)}
+.bd.rj{background:rgba(255,107,112,.16);color:var(--danger)}
+.trow.badc{background:rgba(255,107,112,.12)}
+.exwhy.bad{background:rgba(255,107,112,.14)}
+.bar{background:#2b3048}
+/* मुख्य बटन */
+.btn.primary,.msbtn.claim{background:linear-gradient(135deg,#f8cd63,#e9a22b);color:#1d1504;box-shadow:0 6px 18px rgba(233,162,43,.25)}
+.btn.soft,.pill.ghost{background:var(--blue-soft);color:var(--gold)}
+.pill{background:var(--mint-d);color:#0b241c}
+.logo,.pavatar{background:linear-gradient(135deg,#f8cd63,#e9a22b);color:#1d1504}
+.meter{background:#2b3048}
+/* Home का सिक्कों वाला बड़ा कार्ड */
+.wallet{background:var(--hero);box-shadow:0 10px 26px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08)}
+.wallet .btns button{background:rgba(255,255,255,.14);color:#fff}
+.wallet .btns button.w{background:var(--gold);color:#1d1504}
+/* Explore की रंगीन टाइलें */
+.c1{background:rgba(245,185,66,.16);color:#f5b942}
+.c2{background:rgba(143,168,255,.16);color:#8fa8ff}
+.c3{background:rgba(53,208,160,.16);color:#35d0a0}
+.c4{background:rgba(255,184,107,.16);color:#ffb86b}
+.c5{background:rgba(255,143,177,.16);color:#ff8fb1}
+.mico,.exico,.prico,.mrow .mi{background:var(--card2);color:var(--gold)}
+.creator{background:linear-gradient(135deg,#262a45,#2d2f6b)}
+.sec h2 a{color:var(--gold)}
+.checkin .day{background:rgba(53,208,160,.15);color:var(--mint-d)}
+.demo-tag,.demo-bar{background:rgba(245,185,66,.14);color:var(--gold)}
+.dcard.so{background:linear-gradient(135deg,#d9812a,#c2492f)}
+.dcard.pg{background:linear-gradient(135deg,#4b2f8a,#3556c9)}
+.gopt:active{background:var(--card2)}
+.gtarget{display:flex;justify-content:center}
+.gbtn .gmark{color:#fff}
+.hrow b,.kv b{color:var(--text)}
+.ic .dot{box-shadow:0 0 0 2px var(--card)}
+/* आइकन का आकार अलग-अलग जगह */
+.nav button span{display:flex;align-items:center;justify-content:center;font-size:22px}
+.tile .e{font-size:22px}
+.gopt{font-size:30px;display:flex;align-items:center;justify-content:center}
+.gtarget{font-size:80px}.gtarget .gsym{width:1em;height:1em}
+.mrow .ar{color:var(--muted)}
+.mrow .mi .ico{width:1.1em;height:1.1em}
+a{color:var(--gold)}
+::selection{background:rgba(245,185,66,.3)}
+
+.ntf{padding-left:10px;border-left:3px solid transparent}.ntf.un{border-left-color:var(--gold)}

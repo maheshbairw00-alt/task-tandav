@@ -23,6 +23,8 @@ const dayDiff = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
 /* ---------- Check-in reward table (blueprint) ---------- */
 const CHECKIN_TABLE = [[1,15,1],[16,30,2],[31,45,5],[46,60,10],[61,75,15],[76,90,20],[91,105,25],[106,120,30],[121,135,35],[136,150,40],[151,165,45],[166,180,50],[181,195,55],[196,210,60],[211,225,65],[226,240,70],[241,255,75],[256,270,80],[271,285,85],[286,300,90],[301,315,95],[316,330,100],[331,345,105],[346,360,110],[361,365,115]];
 const rewardForDay = (d) => { for (const [a, b, c] of CHECKIN_TABLE) if (d >= a && d <= b) return c; return 0; };
+const CHECKIN_BONUS = { 7: 10, 30: 50 };   // इन दिनों पर तय रिवॉर्ड के ऊपर एक बार का बोनस (कॉइन)
+const bonusForDay = (d) => CHECKIN_BONUS[d] || 0;
 
 /* ---------- demo api layer ---------- */
 const api = {
@@ -80,7 +82,7 @@ const api = {
     if (u.lastCheckin) { const gap = dayDiff(u.lastCheckin, t); if (gap > 1) next = 1; }
     const claimedToday = u.lastCheckin === t;
     const shownDay = claimedToday ? u.streak : Math.min(next, 365);
-    return { claimedToday, day: shownDay, reward: rewardForDay(claimedToday ? u.streak : Math.min(next, 365)), done: u.streak >= 365 && claimedToday };
+    return { claimedToday, day: shownDay, reward: rewardForDay(claimedToday ? u.streak : Math.min(next, 365)), bonus: bonusForDay(claimedToday ? u.streak : Math.min(next, 365)), done: u.streak >= 365 && claimedToday };
   },
   claimCheckin() {
     const u = this.currentUser(); if (!u) return { ok: false, msg: 'लॉगिन करें।' };
@@ -89,10 +91,11 @@ const api = {
     const gap = u.lastCheckin ? dayDiff(u.lastCheckin, todayStr()) : 1;
     u.streak = gap > 1 ? 1 : u.streak + 1;
     u.lastCheckin = todayStr();
-    const c = rewardForDay(u.streak);
-    u.coins += c; u.earned += c;
-    u.ledger.unshift({ id: 'TXN' + Date.now().toString(36).toUpperCase(), type: 'Daily Check-in', coins: c, at: new Date().toISOString(), demo: true });
-    this.saveUser(u); return { ok: true, coins: c, day: u.streak };
+    const c = rewardForDay(u.streak), b = bonusForDay(u.streak), at = new Date().toISOString();
+    u.coins += c + b; u.earned += c + b;
+    u.ledger.unshift({ id: 'TXN' + Date.now().toString(36).toUpperCase(), type: 'Daily Check-in', coins: c, at, demo: true });
+    if (b) u.ledger.unshift({ id: 'TXB' + Date.now().toString(36).toUpperCase(), type: 'Check-in Bonus', coins: b, at, demo: true });
+    this.saveUser(u); return { ok: true, coins: c, bonus: b, day: u.streak };
   }
 };
 
@@ -115,8 +118,8 @@ const OFFERS = ['App Install','Game','Shopping','Special','Premium'];
 function route() {
   const u = api.currentUser();
   let v = (location.hash || '').replace('#', '');
-  if (!['register', 'login', 'home', 'captcha', 'wallet', 'profile', 'community', 'tasks', 'quiz', 'reading', 'game', 'offers', 'mission', 'exam', 'promote', 'redeem'].includes(v)) v = '';
-  if (!u && (v === 'home' || v === 'captcha' || v === 'wallet' || v === 'profile' || v === 'community' || v === 'tasks' || v === 'quiz' || v === 'reading' || v === 'game' || v === 'offers' || v === 'mission' || v === 'exam' || v === 'promote' || v === 'redeem')) v = '';
+  if (!['register', 'login', 'home', 'captcha', 'wallet', 'profile', 'tasks', 'quiz', 'reading', 'game', 'offers', 'mission', 'exam', 'promote', 'redeem', 'watch', 'notifs', 'feedback'].includes(v)) v = '';
+  if (!u && (v === 'home' || v === 'captcha' || v === 'wallet' || v === 'profile' || v === 'tasks' || v === 'quiz' || v === 'reading' || v === 'game' || v === 'offers' || v === 'mission' || v === 'exam' || v === 'promote' || v === 'redeem')) v = '';
   if (u && (v === 'login' || v === 'register')) v = 'home';
   if (!v) v = u ? 'home' : (Object.keys(api.users()).length ? 'login' : 'register');
   closeModal();
@@ -134,8 +137,11 @@ function route() {
   else if (v === 'offers') viewOffers();
   else if (v === 'mission') viewMission();
   else if (v === 'exam') viewExam();
-  else if (v === 'promote') viewPromote();
+  else if (v === 'promote') { if (feat('promote')) viewPromote(); else go('home'); }
   else if (v === 'redeem') viewRedeem();
+  else if (v === 'watch') viewWatch();
+  else if (v === 'notifs') viewNotifs();
+  else if (v === 'feedback') viewFeedback();
   else viewHome();
 }
 window.addEventListener('hashchange', route);
@@ -171,7 +177,7 @@ function viewRegister() {
   const setErr = (id, m) => { $(id).textContent = m || ''; };
   const refresh = () => { $('go').disabled = !(verified && verifiedMobile === $('mobile').value && $('terms').checked); };
 
-  $('termsLink').onclick = (e) => { e.preventDefault(); toast('Terms पेज जल्द जुड़ेगा'); };
+  $('termsLink').onclick = (e) => { e.preventDefault(); window.open('terms.html', '_blank'); };
   $('mobile').addEventListener('input', () => {
     $('mobile').value = $('mobile').value.replace(/\D/g, '');
     if ($('mobile').value !== verifiedMobile) { verified = false; $('otpInfo').classList.add('hidden'); }
@@ -268,24 +274,23 @@ function viewHome() {
   <div class="page">
   <div class="top">
     <div class="hi"><small>नमस्ते 👋</small><b>${esc(first)}</b></div>
-    <div class="icons"><button class="ic" data-soon="Notifications">🔔<i class="dot"></i></button><button class="ic" id="logoutBtn" title="Logout">🚪</button></div>
+    <div class="icons"><button class="ic" data-go="notifs">🔔${ntUnread() ? '<i class="dot"></i>' : ''}</button><button class="ic" id="logoutBtn" title="Logout">🚪</button></div>
   </div>
 
   <div class="wallet">
     <small>Total Coins</small>
     <div class="bal">${u.coins.toLocaleString('en-IN')}</div>
     <div class="inr">≈ ₹${inr} &nbsp;·&nbsp; 100 Coins = ₹1</div>
-    <div class="mini"><span>कुल कमाई: ${u.earned.toLocaleString('en-IN')}</span><span>निकाले: ₹${u.withdrawn}</span></div>
-    <div class="btns"><button class="w" id="homeWd">Withdraw</button><button id="homeHist">History</button></div>
+    <div class="mini"><span>कुल रिवॉर्ड: ${u.earned.toLocaleString('en-IN')}</span><span>रिडीम किए: ₹${u.withdrawn}</span></div>
+    <div class="btns"><button class="w" id="homeWd">Redeem</button><button id="homeHist">History</button></div>
   </div>
 
   <div class="sec"><h2>Daily Check-in <a href="#" id="cal">पूरा कैलेंडर ▸</a></h2>
     <div class="card checkin">
       <div class="day"><div>${cs.day || 1}<span>Day</span></div></div>
-      <div class="info"><b>आज का रिवॉर्ड: ${cs.reward || rewardForDay(1)} Coin${(cs.reward || 1) > 1 ? 's' : ''}</b><small>${cs.done ? '365 दिन पूरे! 🎉' : cs.claimedToday ? 'आज का रिवॉर्ड मिल गया ✓' : 'रोज़ आएँ, इनाम बढ़ता जाएगा'}</small></div>
+      <div class="info"><b>आज का रिवॉर्ड: ${cs.reward || rewardForDay(1)} Coin${(cs.reward || 1) > 1 ? 's' : ''}${cs.bonus ? ' + ' + cs.bonus + ' बोनस' : ''}</b><small>${cs.done ? '365 दिन पूरे! 🎉' : cs.claimedToday ? 'आज का रिवॉर्ड मिल गया ✓' : 'रोज़ आएँ, इनाम बढ़ता जाएगा'}</small></div>
       <button class="pill" id="claim" ${cs.claimedToday || cs.done ? 'disabled' : ''}>${cs.claimedToday ? 'Claimed' : 'Claim'}</button>
     </div>
-    ${cs.done ? `<div class="card" style="margin-top:10px;background:var(--amber)"><b>🎁 Special Creator Offer</b><div class="hint">365 दिन पूरे करने पर Premium Creator Membership सिर्फ़ ₹50 में। Admin Approval के बाद उपलब्ध।</div></div>` : ''}
   </div>
 
   <div class="sec"><h2>CAPTCHA Task</h2>
@@ -301,12 +306,12 @@ function viewHome() {
   </div></div>
 
   <div class="sec"><h2>Explore Tasks</h2>
-    <div class="grid5">${EXPLORE.map(([e, n, c]) => `<button class="tile" ${n === 'Quiz' || n === 'Reading' ? `data-go="${n.toLowerCase()}"` : `data-soon="${n} Tasks"`}><div class="e ${c}">${e}</div><b>${n}</b><small>Reward: Task के अनुसार</small></button>`).join('')}</div>
+    <div class="grid5">${EXPLORE.filter(([e, n]) => (n !== 'Survey' || feat('survey')) && (n !== 'Offerwall' || feat('offerwall'))).map(([e, n, c]) => `<button class="tile" ${n === 'Quiz' || n === 'Reading' || n === 'Feedback' ? `data-go="${n.toLowerCase()}"` : `data-soon="${n} Tasks"`}><div class="e ${c}">${e}</div><b>${n}</b><small>Reward: Task के अनुसार</small></button>`).join('')}</div>
   </div>
 
-  <div class="sec"><h2>Offers</h2>
+  ${feat('offers') ? `<div class="sec"><h2>Offers</h2>
     <div class="chips">${OFFERS.map(o => `<button class="chip" data-soon="${o} Offers">${o}</button>`).join('')}</div>
-  </div>
+  </div>` : ''}
 
   <div class="sec"><h2>Daily Mission</h2>
     <div class="card split"><div><b>🎯 आज का Mission</b><br><small>Verification के बाद ही Reward मिलेगा</small></div><button class="pill ghost" data-go="mission">खोलें</button></div>
@@ -314,12 +319,11 @@ function viewHome() {
 
   ${exHomeHTML()}
 
-  <div class="sec"><div class="ad"><b>ADVERTISEMENT</b>बैनर विज्ञापन की जगह (Ad Network जुड़ने पर)</div></div>
 
   <div class="sec"><div class="card creator">
-    <div style="font-size:30px">🎬</div>
-    <div class="t"><b>Premium Creator बनें</b><small>Reels, Studio, Brand Campaigns और Creator Earnings</small></div>
-    <button class="pill ghost" data-soon="Creator">देखें</button>
+    <div class="mico">▶️</div>
+    <div class="t"><b>Watch YouTube Video</b><small>टास्क कैसे पूरा करें, वीडियो में देखें</small></div>
+    <button class="pill ghost" data-go="watch">देखें</button>
   </div></div>
   ${moreEarnHTML()}
   ${promoHomeHTML()}
@@ -331,7 +335,7 @@ function viewHome() {
   $('claim').onclick = () => {
     const r = api.claimCheckin();
     if (!r.ok) return toast(r.msg);
-    toast('Day ' + r.day + ': +' + r.coins + ' Coins (डेमो)'); viewHome();
+    toast('Day ' + r.day + ': +' + r.coins + ' Coins' + (r.bonus ? ' + ' + r.bonus + ' बोनस' : '') + ' (डेमो)'); viewHome();
   };
   $('cal').onclick = (e) => { e.preventDefault(); openCal(); };
   $('startCaptcha').onclick = () => go('captcha');
@@ -344,7 +348,7 @@ function viewHome() {
 /* ---------- CAPTCHA ---------- */
 /* DEMO: जाँच और Coin क्रेडिट अभी फ़ोन में होता है। असली ऐप में जवाब की जाँच, 10/दिन की सीमा और Coins
    Cloud Functions से होंगे, ताकि कोई ब्राउज़र से छेड़छाड़ न कर सके। */
-const CAP_REWARD = 5;       // DEMO राशि: असली राशि Admin तय करेगा
+const CAP_REWARD = 2;       // DEMO राशि: असली राशि Admin तय करेगा
 const CAP_TTL = 120000;      // CAPTCHA 2 मिनट में एक्सपायर
 const CAP_UP = 'ABCDEFGHJKLMNPQRSTUVWXYZ', CAP_LO = 'abcdefghjkmnpqrstuvwxyz', CAP_NU = '23456789';
 const capUsed = new Set();
@@ -397,14 +401,13 @@ function viewCaptcha() {
       </div>
       <div class="res" id="res"></div>
     </div>
-    <div class="sec" style="margin-top:16px"><div class="ad"><b>ADVERTISEMENT</b>बैनर विज्ञापन की जगह (CAPTCHA से अलग)</div></div>
     <button class="btn soft" id="hist">CAPTCHA Reward History</button>
   </div>`;
 
   const res = (t, c) => { $('res').textContent = t; $('res').className = 'res ' + (c || ''); };
   function paint() {
     const u = capUser(); const n = u.captchaCount;
-    $('cnt').textContent = 'आज: ' + n + '/10'; $('earn').textContent = 'आज की कमाई: ' + (n * CAP_REWARD) + ' Coins';
+    $('cnt').textContent = 'आज: ' + n + '/10'; $('earn').textContent = 'आज के रिवॉर्ड: ' + (n * CAP_REWARD) + ' Coins';
     $('tot').textContent = u.coins.toLocaleString('en-IN'); $('fill').style.width = (n * 10) + '%';
     const full = n >= 10; $('play').classList.toggle('hidden', full);
     if (full) res('आज की 10 की सीमा पूरी हो गई। कल फिर आएँ। 🎉', 'ok');
@@ -449,19 +452,19 @@ function viewCaptcha() {
 /* ---------- WALLET: Withdraw + History + Pending + Payment Details ---------- */
 /* DEMO: सब कुछ फ़ोन की मेमोरी में है। असली ऐप में Withdraw, Coins की कटौती, Status बदलना और भुगतान
    सिर्फ़ Cloud Functions और भरोसेमंद Payment Provider से होंगे। */
-const MIN_WD_RS = 100;
+const MIN_WD_RS = 10;
 const WD_OPEN = ['Pending', 'Under Review', 'Approved', 'Processing'];
 let walletTab = 'history', walFilter = 'all', walletSheet = '', walMethod = 'upi';
 const uid = (p) => p + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 1000);
 const fdt = (iso) => new Date(iso).toLocaleString('en-IN');
 const maskUpi = (s) => s ? s.split('@')[0].slice(0, 2) + '***@' + (s.split('@')[1] || '') : '';
 const maskAcc = (s) => s ? 'XXXXXX' + s.slice(-4) : '';
-const NAV = [['home', '🏠', 'Home'], ['tasks', '✅', 'Tasks'], ['wallet', '👛', 'Wallet'], ['community', '💬', 'Community'], ['profile', '👤', 'Profile']];
+const NAV = [['home', '🏠', 'Home'], ['tasks', '✅', 'Tasks'], ['wallet', '👛', 'Redeem'], ['profile', '👤', 'Profile']];
 const navHTML = (on) => '<nav class="nav">' + NAV.map(([k, e, n]) => `<button data-nav="${k}" class="${on === k ? 'on' : ''}"><span>${e}</span>${n}</button>`).join('') + '</nav>';
 function bindNav() {
   document.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => {
     const k = b.dataset.nav;
-    if (k === 'home' || k === 'wallet' || k === 'profile' || k === 'community' || k === 'tasks') go(k); else toast(NAV.find(x => x[0] === k)[2] + ' पेज अगले चरण में बनेगा');
+    if (k === 'home' || k === 'wallet' || k === 'profile' || k === 'tasks') go(k); else toast(NAV.find(x => x[0] === k)[2] + ' पेज अगले चरण में बनेगा');
   });
 }
 const bdc = (s) => s === 'Completed' ? '' : (['Rejected', 'Failed', 'Cancelled'].includes(s) ? 'rj' : 'pn');
@@ -480,7 +483,7 @@ function walStatus(u, t) {
   if (t.type !== 'Withdrawal') return 'Completed';
   const w = u.withdrawals.find(x => x.id === t.ref); return w ? w.status : 'Pending';
 }
-const walSource = (t) => ({ 'Daily Check-in': 'Daily Check-in Reward', 'CAPTCHA Reward': 'CAPTCHA Task Reward', 'Withdrawal': 'Withdrawal Request ' + (t.ref || ''), 'Withdrawal Refund': 'रद्द हुई Request ' + (t.ref || '') }[t.type] || t.type);
+const walSource = (t) => ({ 'Daily Check-in': 'Daily Check-in Reward', 'Check-in Bonus': 'Check-in बोनस', 'Feedback Reward': 'Feedback Reward', 'CAPTCHA Reward': 'CAPTCHA Task Reward', 'Withdrawal': 'Withdrawal Request ' + (t.ref || ''), 'Withdrawal Refund': 'रद्द हुई Request ' + (t.ref || '') }[t.type] || t.type);
 
 function tabHistory(u) {
   const f = { all: () => true, recv: t => t.coins > 0, ded: t => t.coins < 0, wd: t => t.type.startsWith('Withdrawal'), pend: t => t.type === 'Withdrawal' && WD_OPEN.includes(walStatus(u, t)) }[walFilter];
@@ -509,7 +512,7 @@ function tabPending(u) {
   return list.map(w => `<div class="card" style="margin-bottom:10px"><div class="split"><b>₹${w.amount}</b><span class="bd ${bdc(w.status)}">${w.status}</span></div>` +
     kv('Request ID', esc(w.id)) + kv('Required Coins', w.coins.toLocaleString('en-IN')) + kv('Request Date/Time', fdt(w.at)) + kv('Payment Method', esc(w.dest)) + kv('Last Updated', fdt(w.upd)) +
     (w.status === 'Pending' ? `<button class="btn soft" style="margin-top:10px" data-cancel="${esc(w.id)}">Request रद्द करें (DEMO)</button>` : '') + `</div>`).join('') +
-    '<div class="hint">भुगतान की पुष्टि होने से पहले Request को Completed नहीं दिखाया जाएगा।</div>';
+    '';
 }
 function tabPayment(u) {
   const p = u.pay, upi = walMethod === 'upi';
@@ -519,7 +522,7 @@ function tabPayment(u) {
   const saved = (p.upi ? 'UPI: ' + esc(maskUpi(p.upi)) : 'UPI: सेव नहीं') + ' · ' + (p.acc ? 'Bank: ' + esc(maskAcc(p.acc)) : 'Bank: सेव नहीं');
   return `<div class="seg"><button data-m="upi" class="${upi ? 'on' : ''}">UPI</button><button data-m="bank" class="${!upi ? 'on' : ''}">Bank Account</button></div>
     <div class="card">${form}<div class="err" id="pErr" style="color:var(--danger);font-size:12px;margin-bottom:8px"></div><button class="btn primary" id="pSave">Save Details</button></div>
-    <div class="hint" style="margin-top:10px">सेव: ${saved}<br>Verification: बाकी (DEMO में असली Verification नहीं है)।<br>UPI PIN, Banking Password और OTP कभी नहीं माँगे जाएँगे।</div>`;
+    <div class="hint" style="margin-top:10px">सेव: ${saved}</div>`;
 }
 function walSavePay() {
   const u = walUser(), e = (m) => { $('pErr').textContent = m; }, name = $('pName').value.trim();
@@ -540,12 +543,11 @@ function walSavePay() {
 }
 function walWithdrawSheet() {
   const u = walUser(), p = u.pay;
-  $('sheet').innerHTML = `<h3>Withdraw</h3><div class="sub">उपलब्ध: ${u.coins.toLocaleString('en-IN')} Coins ≈ ₹${(u.coins / 100).toFixed(2)}<br>न्यूनतम: ₹${MIN_WD_RS} (${(MIN_WD_RS * 100).toLocaleString('en-IN')} Coins)</div>
+  $('sheet').innerHTML = `<h3>Redeem</h3><div class="sub">उपलब्ध: ${u.coins.toLocaleString('en-IN')} Coins ≈ ₹${(u.coins / 100).toFixed(2)}<br>न्यूनतम: ₹${MIN_WD_RS} (${(MIN_WD_RS * 100).toLocaleString('en-IN')} Coins)</div>
     <div class="field"><label>रकम (₹)</label><input id="wAmt" inputmode="numeric" placeholder="जैसे: 100"></div>
     <div class="field"><label>भुगतान का तरीका</label><select id="wMethod"><option value="upi">UPI ${p.upi ? '(' + esc(maskUpi(p.upi)) + ')' : '(सेव नहीं)'}</option><option value="bank">Bank ${p.acc ? '(' + esc(maskAcc(p.acc)) + ')' : '(सेव नहीं)'}</option></select></div>
     <div class="err" id="wErr" style="color:var(--danger);font-size:12px;margin-bottom:8px"></div>
     <button class="btn primary" id="wSubmit">Withdrawal Request भेजें</button>
-    <div class="hint">Request पहले Pending रहेगी। जाँच और भुगतान की पुष्टि के बाद ही पूरी मानी जाएगी।</div>
     <button class="btn soft" style="margin-top:10px" id="closeSheet">बंद करें</button>`;
   $('modal').classList.remove('hidden'); $('closeSheet').onclick = closeModal; $('wSubmit').onclick = walSubmit;
 }
@@ -576,11 +578,11 @@ function viewWallet() {
   const u = walUser(), pend = walPendingCoins(u);
   const body = walletTab === 'history' ? tabHistory(u) : walletTab === 'pending' ? tabPending(u) : tabPayment(u);
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
-    <div class="top"><div class="hi"><small>Task Tandav</small><b>My Wallet</b></div><span style="width:40px"></span></div>
+    <div class="top"><div class="hi"><small>Task Tandav</small><b>Redeem</b></div><span style="width:40px"></span></div>
     <div class="demo-tag">DEMO: ये Coins असली नहीं हैं और कोई असली भुगतान नहीं होगा।</div>
     <div class="wallet"><small>Available Coins</small><div class="bal">${u.coins.toLocaleString('en-IN')}</div><div class="inr">≈ ₹${(u.coins / 100).toFixed(2)} &nbsp;·&nbsp; 100 Coins = ₹1</div>
-      <div class="mini"><span>कुल कमाई: ${u.earned.toLocaleString('en-IN')}</span><span>Pending: ${pend.toLocaleString('en-IN')} Coins</span></div>
-      <div class="btns"><button class="w" id="wdBtn">Withdraw</button></div></div>
+      <div class="mini"><span>कुल रिवॉर्ड: ${u.earned.toLocaleString('en-IN')}</span><span>Pending: ${pend.toLocaleString('en-IN')} Coins</span></div>
+      <div class="btns"><button class="w" id="wdBtn">Redeem</button></div></div>
     <div class="seg">${[['history', 'History'], ['pending', 'Pending'], ['pay', 'Payment Details']].map(([k, n]) => `<button data-tab="${k}" class="${walletTab === k ? 'on' : ''}">${n}</button>`).join('')}</div>
     <div>${body}</div></div>${navHTML('wallet')}`;
   bindNav();
@@ -598,8 +600,8 @@ function viewWallet() {
 /* DEMO: डेटा फ़ोन में है। Leaderboard, Referral की जाँच, Push Notification, Photo Upload, Sessions
    और Support Ticket का Admin तक पहुँचना बैकएंड (Firebase) के बाद असली होंगे। */
 const PRF_LANGS = ['Hindi', 'English', 'Bengali', 'Urdu', 'Tamil', 'Telugu', 'Marathi', 'Gujarati', 'Kannada', 'Malayalam', 'Punjabi', 'Odia'];
-const PRF_CATS = ['Coins Not Received', 'Withdrawal Problem', 'Transaction Problem', 'Payment Details Problem', 'Task Problem', 'Offer Problem', 'Community Problem', 'Other'];
-const PRF_POLICIES = ['Terms & Conditions', 'Privacy Policy', 'Community Guidelines', 'Reward Policy', 'Withdrawal Policy', 'Advertisement Policy', 'Referral Policy'];
+const PRF_CATS = ['Coins Not Received', 'Redeem Problem', 'Transaction Problem', 'Payment Details Problem', 'Task Problem', 'Offer Problem', 'Other'];
+const PRF_POLICIES = ['Terms & Conditions', 'Privacy Policy', 'Community Guidelines', 'Reward Policy', 'Redeem Policy', 'Advertisement Policy', 'Referral Policy'];
 let prfActFilter = 'all';
 
 function prfUser() {
@@ -607,7 +609,7 @@ function prfUser() {
   if (u.bio === undefined) { u.bio = ''; d = true; }
   if (!u.tickets) { u.tickets = []; d = true; }
   if (!u.refCode) { u.refCode = 'TT' + Math.random().toString(36).slice(2, 8).toUpperCase(); d = true; }
-  if (!u.notifs) { u.notifs = [{ id: uid('N'), cat: 'Account Updates', text: 'Task Tandav में आपका स्वागत है!', at: new Date().toISOString(), read: false }]; d = true; }
+  if (!u.notifs) { u.notifs = [{ id: uid('N'), cat: 'Account Updates', title: 'स्वागत', text: 'Task Tandav में आपका स्वागत है!', at: new Date().toISOString(), read: false }]; d = true; }
   if (d) api.saveUser(u);
   return u;
 }
@@ -622,7 +624,7 @@ const prfMobile = (m) => /^\d{10}$/.test(m) ? '+91 ' + m.slice(0, 2) + '****' + 
 function viewProfile() {
   if (!api.currentUser()) return go('login');
   const u = prfUser(), unread = u.notifs.filter(n => !n.read).length;
-  const items = [['✏️', 'Edit Profile', 'edit'], ['🪪', 'Personal Information', 'info'], ['🕘', 'My Activity History', 'act'], ['🔔', 'Notifications', 'ntf'], ['🏆', 'Leaderboard', 'lead'], ['🎁', 'Refer & Earn', 'ref'], ['🌐', 'Language', 'lang'], ['🛟', 'Help & Support', 'sup'], ['🔒', 'Security & Privacy', 'sec'], ['📄', 'Terms & Conditions', 'terms'], ['ℹ️', 'About Task Tandav', 'about']];
+  const items = [['✏️', 'Edit Profile', 'edit'], ['🪪', 'Personal Information', 'info'], ['🕘', 'My Activity History', 'act'], ['🔔', 'Notifications', 'ntf'], ['🏆', 'Leaderboard', 'lead'], ['🎁', 'Refer & Get Rewards', 'ref'], ['🌐', 'Language', 'lang'], ['🛟', 'Help & Support', 'sup'], ['📋', 'नियम और ज़रूरी जानकारी', 'rules'], ...(feat('promote') ? [['📣', 'App Promote', 'promote']] : []), ['🔒', 'Security & Privacy', 'sec'], ['📄', 'Terms & Conditions', 'terms'], ['ℹ️', 'About Task Tandav', 'about']];
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><div class="hi"><small>Task Tandav</small><b>Profile</b></div><span style="width:40px"></span></div>
     <div class="card"><div class="phead"><div class="pavatar">${esc(u.name.trim()[0].toUpperCase())}</div>
@@ -638,7 +640,7 @@ function viewProfile() {
 /* STEP B: Edit Profile + Personal Information */
 function prfEdit() {
   const u = prfUser();
-  prfSheet(`<h3>Edit Profile</h3><div class="sub">User ID बदली नहीं जा सकती। Profile Photo बैकएंड (Storage) के बाद जुड़ेगी।</div>
+  prfSheet(`<h3>Edit Profile</h3><div class="sub">User ID बदली नहीं जा सकती।</div>
     <div class="field"><label>User ID</label><input value="${esc(u.id)}" disabled></div>
     <div class="field"><label>Display Name</label><input id="eName" maxlength="40" value="${esc(u.name)}"></div>
     <div class="field"><label>About me (वैकल्पिक)</label><input id="eBio" maxlength="80" value="${esc(u.bio)}"></div>
@@ -660,12 +662,12 @@ function prfInfo() {
 /* STEP C: My Activity History */
 function prfActivity() {
   const u = prfUser(), rows = [];
-  u.ledger.filter(t => t.type === 'Daily Check-in').forEach(t => rows.push({ n: 'Daily Check-in', c: 'checkin', cn: 'Daily Check-in', at: t.at, st: 'Completed', rw: t.coins, ref: t.id }));
+  u.ledger.filter(t => t.type === 'Daily Check-in' || t.type === 'Check-in Bonus').forEach(t => rows.push({ n: t.type === 'Check-in Bonus' ? 'Check-in बोनस' : 'Daily Check-in', c: 'checkin', cn: 'Daily Check-in', at: t.at, st: 'Completed', rw: t.coins, ref: t.id }));
   (u.captchaHistory || []).forEach(t => rows.push({ n: 'CAPTCHA Task', c: 'captcha', cn: 'CAPTCHA Tasks', at: t.at, st: t.ok ? 'Completed' : 'Rejected', rw: t.coins, ref: t.id }));
   rows.sort((a, b) => b.at.localeCompare(a.at));
   const list = rows.filter(r => prfActFilter === 'all' || r.c === prfActFilter).slice(0, 100);
   const chips = [['all', 'All'], ['checkin', 'Daily Check-in'], ['captcha', 'CAPTCHA Tasks']].map(([k, n]) => `<button data-af="${k}" class="${prfActFilter === k ? 'on' : ''}">${n}</button>`).join('');
-  prfSheet(`<h3>My Activity History</h3><div class="sub">सिर्फ़ गतिविधियों का रिकॉर्ड। Coins का पूरा हिसाब Wallet में है। Explore Tasks, Offers, Daily Mission और Community की गतिविधि वे पेज बनने पर जुड़ेगी।</div><div class="fchips">${chips}</div>` +
+  prfSheet(`<h3>My Activity History</h3><div class="sub">सिर्फ़ गतिविधियों का रिकॉर्ड। Coins का पूरा हिसाब Redeem पेज में है। Explore Tasks, Offers, Daily Mission और Community की गतिविधि वे पेज बनने पर जुड़ेगी।</div><div class="fchips">${chips}</div>` +
     (list.length ? list.map(r => `<div class="hrow"><div><b>${r.n}</b><br>${r.cn}<br>${fdt(r.at)}<br>Ref: ${esc(r.ref)}</div><div style="text-align:right"><span class="bd ${r.st === 'Completed' ? '' : 'rj'}">${r.st}</span><br><b>${r.rw ? '+' + r.rw + ' Coin' : '0 Coin'}</b></div></div>`).join('') : '<div class="sub">अभी कोई गतिविधि नहीं।</div>'));
   document.querySelectorAll('[data-af]').forEach(b => b.onclick = () => { prfActFilter = b.dataset.af; prfActivity(); });
 }
@@ -681,19 +683,17 @@ function prfNotifs() {
   document.querySelectorAll('[data-nd]').forEach(b => b.onclick = () => { u.notifs = u.notifs.filter(n => n.id !== b.dataset.nd); again(); });
 }
 
-/* STEP E: Leaderboard + Refer & Earn */
+/* STEP E: Leaderboard + Refer & Get Rewards */
 function prfLead() {
   const u = prfUser(), ok = (u.captchaHistory || []).filter(x => x.ok).length;
-  prfSheet(`<h3>Leaderboard</h3><div class="sub">Top Earners, Top Task Completers और Top Community Contributors में सिर्फ़ असली, Verified गतिविधि गिनी जाएगी।</div>
-    <div class="stat"><div><b>${u.earned.toLocaleString('en-IN')}</b>कुल Coins</div><div><b>${ok}</b>सही CAPTCHA</div><div><b>${u.streak}</b>Check-in दिन</div></div>
-    <div class="hint">आपकी Rank और दूसरे Users की सूची अभी नहीं दिख सकती, क्योंकि इसके लिए सबका डेटा सर्वर पर चाहिए (बैकएंड के बाद)।</div>`);
+  prfSheet(`<h3>Leaderboard</h3><div class="sub">Top Reward Collectors, Top Task Completers और Top Community Contributors में सिर्फ़ असली, Verified गतिविधि गिनी जाएगी।</div>
+    <div class="stat"><div><b>${u.earned.toLocaleString('en-IN')}</b>कुल Coins</div><div><b>${ok}</b>सही CAPTCHA</div><div><b>${u.streak}</b>Check-in दिन</div></div>`);
 }
 function prfRefer() {
   const u = prfUser(), txt = 'Task Tandav जॉइन करें। मेरा Referral Code: ' + u.refCode;
-  prfSheet(`<h3>Refer & Earn</h3><div class="sub">Reward सिर्फ़ असली और Verified Referral पर मिलेगा।</div>` + prfKV('आपका Referral Code', esc(u.refCode)) +
+  prfSheet(`<h3>Refer & Get Rewards</h3><div class="sub">Reward सिर्फ़ असली और Verified Referral पर मिलेगा।</div>` + prfKV('आपका Referral Code', esc(u.refCode)) +
     `<button class="btn soft" id="rCopy" style="margin:10px 0 8px">Copy Code</button><button class="btn soft" id="rShare">Share</button>
-    <div class="stat" style="margin-top:12px"><div><b>0</b>Referred</div><div><b>0</b>Pending</div><div><b>0</b>Approved</div></div>
-    <div class="hint">ये गिनती बैकएंड जुड़ने पर असली होगी। Reward की राशि और नियम Admin तय करेगा, और Reward के लिए असली Revenue और Budget ज़रूरी है।</div>`);
+    <div class="stat" style="margin-top:12px"><div><b>0</b>Referred</div><div><b>0</b>Pending</div><div><b>0</b>Approved</div></div>`);
   const copy = () => (navigator.clipboard ? navigator.clipboard.writeText(u.refCode).then(() => toast('Code कॉपी हो गया'), () => toast('Code: ' + u.refCode)) : toast('Code: ' + u.refCode));
   $('rCopy').onclick = copy;
   $('rShare').onclick = () => { if (navigator.share) navigator.share({ title: 'Task Tandav', text: txt }).catch(() => {}); else copy(); };
@@ -702,7 +702,7 @@ function prfRefer() {
 /* STEP F: Language */
 function prfLang() {
   const u = prfUser();
-  prfSheet(`<h3>Language</h3><div class="sub">आपकी पसंद सेव होगी। पूरे ऐप का अनुवाद अगले चरण में जुड़ेगा, अभी ऐप हिंदी में ही दिखेगा।</div>` +
+  prfSheet(`<h3>Language</h3><div class="sub">आपकी पसंद सेव होगी।</div>` +
     PRF_LANGS.map(l => `<button class="trow" data-lg="${l}"><b>${l}</b><span>${u.lang === l ? '✓' : ''}</span></button>`).join(''));
   document.querySelectorAll('[data-lg]').forEach(b => b.onclick = () => { u.lang = b.dataset.lg; api.saveUser(u); toast('Language: ' + u.lang); prfLang(); });
 }
@@ -734,8 +734,7 @@ function prfSecurity() {
     <div class="field"><label>नया पासवर्ड</label><input id="cNew" type="password" autocomplete="new-password"></div>
     <div class="field"><label>नया पासवर्ड दोबारा</label><input id="cNew2" type="password" autocomplete="new-password"></div>
     <div class="err" id="cErr" style="color:var(--danger);font-size:12px;margin-bottom:8px"></div>
-    <button class="btn primary" id="cSave">पासवर्ड बदलें</button>
-    <div class="hint" style="margin-top:12px">बैकएंड के बाद जुड़ेंगे: Active Sessions, दूसरे Devices से Logout, Security Alerts, Account Data Request और Account Deactivation/Deletion।</div>`);
+    <button class="btn primary" id="cSave">पासवर्ड बदलें</button>`);
   $('cSave').onclick = () => {
     const u = api.currentUser(), enc = (s) => btoa(unescape(encodeURIComponent(s))), o = $('cOld').value, n = $('cNew').value, e = (m) => { $('cErr').textContent = m; };
     if (u.pass !== enc(o)) return e('अभी का पासवर्ड गलत है।');
@@ -750,8 +749,12 @@ function prfTerms() {
     PRF_POLICIES.map(p => `<div class="kv"><span>${p}</span><b>Draft · जाँच बाकी</b></div>`).join(''));
 }
 function prfAbout() {
-  prfSheet(`<h3>About Task Tandav</h3>` + prfKV('App Name', 'Task Tandav') + prfKV('App Version', '0.1 (DEMO)') + prfKV('Official Website', 'जल्द') + prfKV('YouTube / Telegram', 'Admin Panel से जुड़ेंगे') + prfKV('Contact', 'जल्द') + prfKV('Copyright', '© Task Tandav') +
-    `<div class="hint" style="margin-top:10px">Task Tandav अभी डेमो रूप में है। दिखने वाले Coins असली नहीं हैं।</div>`);
+  const mail = (typeof APP_SUPPORT_EMAIL !== 'undefined' && APP_SUPPORT_EMAIL) ? APP_SUPPORT_EMAIL : '';
+  const lnk = (t, url) => `<a class="btn soft" style="display:block;text-align:center;text-decoration:none;margin-top:8px" href="${url}" target="_blank" rel="noopener">${t}</a>`;
+  prfSheet(`<h3>About Task Tandav</h3>` + prfKV('App Name', 'Task Tandav') + prfKV('App Version', '0.1 (DEMO)') +
+    (mail ? prfKV('Contact', esc(mail)) : '') + prfKV('Copyright', '© ' + new Date().getFullYear() + ' Task Tandav. सर्वाधिकार सुरक्षित।') +
+    lnk('YouTube चैनल', 'https://www.youtube.com/@SuperPro-k5o') + lnk('Telegram', 'https://t.me/Superpro_1Fast_Bot') +
+    (mail ? lnk('ईमेल भेजें', 'mailto:' + encodeURIComponent(mail).replace('%40', '@')) : ''));
 }
 const PRF = { edit: prfEdit, info: prfInfo, act: prfActivity, ntf: prfNotifs, lead: prfLead, ref: prfRefer, lang: prfLang, sup: prfSupport, sec: prfSecurity, terms: prfTerms, about: prfAbout, logout: () => { if (confirm('Logout करना है?')) { api.logout(); go('login'); } } };
 
@@ -814,7 +817,7 @@ function viewCommunity() {
   if (!api.currentUser()) return go('login');
   const u = api.currentUser(), posts = cmLoad(), c = cmCounts(posts, u);
   const list = [...posts].sort(cmSort === 'popular' ? (a, b) => (b.likes.length + b.comments.length) - (a.likes.length + a.comments.length) : (a, b) => b.at.localeCompare(a.at));
-  const feed = list.map((p, i) => cmCard(p, u, posts) + ((i + 1) % 8 === 0 ? '<div class="ad" style="margin:0 0 12px"><b>SPONSORED</b>Native Ad की जगह (Ad Network जुड़ने पर)</div>' : '')).join('') || '<div class="sub" style="text-align:center;padding:24px">अभी कोई पोस्ट नहीं। पहली पोस्ट आप डालें!</div>';
+  const feed = list.map((p, i) => cmCard(p, u, posts)).join('') || '<div class="sub" style="text-align:center;padding:24px">अभी कोई पोस्ट नहीं। पहली पोस्ट आप डालें!</div>';
   $('root').innerHTML = `<div class="page" style="padding-top:12px">
     <div class="top"><div class="hi"><small>Task Tandav</small><b>Community</b></div><span style="width:40px"></span></div>
     <div class="demo-tag">DEMO: पोस्ट सिर्फ़ इसी फ़ोन में सेव होती हैं। असली Community बैकएंड के बाद।</div>
@@ -825,10 +828,8 @@ function viewCommunity() {
       <div class="cmthumbs">${cmPending.map((s, i) => `<div><img src="${s}" alt=""><button data-cm="rmphoto" data-id="${i}">×</button></div>`).join('')}</div>
       <div class="split" style="margin-top:10px"><button class="pill ghost" id="cmAddPhoto">📷 Photo</button><small>Text ${c.text}/${CM_TEXT_LIMIT} · Photo ${c.photo}/${CM_PHOTO_LIMIT}</small><button class="pill" id="cmPost">Post</button></div>
       <input type="file" id="cmFile" accept="image/*" multiple class="hidden"></div></div>
-    <div class="sec"><div class="ad"><b>ADVERTISEMENT</b>Banner Ad की जगह</div></div>
     <div class="seg"><button data-cs="latest" class="${cmSort === 'latest' ? 'on' : ''}">Latest</button><button data-cs="popular" class="${cmSort === 'popular' ? 'on' : ''}">Popular</button></div>
     ${feed}
-    <div class="sec"><div class="ad"><b>ADVERTISEMENT</b>नीचे का Banner Ad</div></div>
     <div class="menu"><button class="mrow" id="cmTop"><span class="mi">🏆</span>Top Members<span class="ar">›</span></button><button class="mrow" id="cmRules"><span class="mi">📜</span>Community Guidelines<span class="ar">›</span></button><button class="mrow" id="cmHelp"><span class="mi">🛟</span>Report & Support<span class="ar">›</span></button></div>
   </div>${navHTML('community')}`;
   bindNav();

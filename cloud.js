@@ -97,7 +97,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 /* ---- Admin के संदेश, Maintenance और ब्लॉक की जाँच (चरण 2-10) ---- */
 function clOverlay(id, html) {
   let o = document.getElementById(id);
-  if (!o) { o = document.createElement('div'); o.id = id; o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(255,255,255,.97);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:inherit;color:#17233D'; document.body.appendChild(o); }
+  if (!o) { o = document.createElement('div'); o.id = id; o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(18,20,31,.98);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:inherit;color:#eceefa'; document.body.appendChild(o); }
   o.innerHTML = html;
 }
 async function clNotice() {
@@ -109,15 +109,8 @@ async function clNotice() {
     if (cs.exists && cs.data().maintenance) { clOverlay('clMaint', '<div><div style="font-size:42px">🛠️</div><h2>अभी Maintenance चल रहा है</h2><p>' + esc(cs.data().msg) + '</p></div>'); return; }
     if (old) old.remove();
     const u = api.users()[clKey(fu.uid)];
-    if (u && u.blocked) { clOverlay('clBlock', '<div><div style="font-size:42px">🚫</div><h2>आपका खाता ब्लॉक है</h2><p>' + esc(u.blockReason || '') + '</p><p>मदद के लिए Admin से संपर्क करें।</p><button id="clBO" style="padding:12px 20px;border:0;border-radius:12px;background:#4269E8;color:#fff;font-weight:700">Logout</button></div>'); document.getElementById('clBO').onclick = () => { document.getElementById('clBlock').remove(); api.logout(); }; return; }
+    if (u && u.blocked) { clOverlay('clBlock', '<div><div style="font-size:42px">🚫</div><h2>आपका खाता ब्लॉक है</h2><p>' + esc(u.blockReason || '') + '</p><p style="font-size:13px">अपील करने के लिए अपना User ID <b>' + esc(u.id || '') + '</b> और नाम बताकर Admin से संपर्क करें।' + (typeof APP_SUPPORT_EMAIL !== 'undefined' && APP_SUPPORT_EMAIL ? ' ईमेल: <b>' + esc(APP_SUPPORT_EMAIL) + '</b>' : '') + '</p><button id="clBO" style="padding:12px 20px;border:0;border-radius:12px;background:#f5b942;color:#1d1504;font-weight:700">Logout</button></div>'); document.getElementById('clBO').onclick = () => { document.getElementById('clBlock').remove(); api.logout(); }; return; }
     const ob = document.getElementById('clBlock'); if (ob) ob.remove();
-    const ns = await clDb().collection('notifications').orderBy('at', 'desc').limit(1).get();
-    ns.forEach((d) => {
-      const n = d.data(), seen = localStorage.getItem('tt_seen_note');
-      if (seen === d.id) return;
-      clOverlay('clNote', '<div style="background:#fff;border:1px solid #E5EAF3;border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.12);max-width:340px"><div style="font-size:34px">🔔</div><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p><button id="clNO" style="padding:11px 20px;border:0;border-radius:12px;background:#4269E8;color:#fff;font-weight:700">ठीक है</button></div>');
-      document.getElementById('clNO').onclick = () => { try { localStorage.setItem('tt_seen_note', d.id); } catch (e) {} document.getElementById('clNote').remove(); };
-    });
   } catch (e) { console.warn('notice', e); }
 }
 if (CL_OK && firebase.apps.length) { try { firebase.auth().onAuthStateChanged((fu) => { if (fu) setTimeout(clNotice, 2500); }); } catch (e) {} }
@@ -154,7 +147,7 @@ function clRef() {
     const fu = firebase.auth().currentUser; if (!CL_OK || !fu) return;
     const u = api.users()[clKey(fu.uid)]; if (!u || u.refAsked || u.referredBy) return;
     if (document.getElementById('clBlock') || document.getElementById('clMaint') || document.getElementById('clNote')) return;
-    clOverlay('clRef', '<div style="background:#fff;border:1px solid #E5EAF3;border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.12);max-width:340px;width:100%"><div style="font-size:34px">🤝</div><h3>Referral Code है?</h3><p style="font-size:14px;color:#7B8497">किसी दोस्त ने बुलाया हो तो उसका Code डालें। नहीं है तो Skip करें।</p><input id="clRI" maxlength="12" placeholder="जैसे TTAB12CD" style="width:100%;padding:12px;border:1px solid #E5EAF3;border-radius:12px;font-size:16px;text-transform:uppercase"><div id="clRE" style="color:#DC2626;font-size:13px;min-height:18px;margin:6px 0"></div><button id="clRS" style="padding:11px 18px;border:0;border-radius:12px;background:#4269E8;color:#fff;font-weight:700">Save</button> <button id="clRK" style="padding:11px 18px;border:0;border-radius:12px;background:#EDF2FF;color:#4269E8;font-weight:700">Skip</button></div>');
+    clOverlay('clRef', '<div style="background:#1c2030;border:1px solid #2b3048;border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.12);max-width:340px;width:100%"><div style="font-size:34px">🤝</div><h3>Referral Code है?</h3><p style="font-size:14px;color:#9aa2c8">किसी दोस्त ने बुलाया हो तो उसका Code डालें। नहीं है तो Skip करें।</p><input id="clRI" maxlength="12" placeholder="जैसे TTAB12CD" style="width:100%;padding:12px;border:1px solid #2b3048;background:#151827;color:#eceefa;border-radius:12px;font-size:16px;text-transform:uppercase"><div id="clRE" style="color:#ff6b70;font-size:13px;min-height:18px;margin:6px 0"></div><button id="clRS" style="padding:11px 18px;border:0;border-radius:12px;background:#f5b942;color:#1d1504;font-weight:700">Save</button> <button id="clRK" style="padding:11px 18px;border:0;border-radius:12px;background:#262a45;color:#f5b942;font-weight:700">Skip</button></div>');
     const done = (code) => { const cu = api.users()[clKey(fu.uid)]; if (cu) { cu.refAsked = true; if (code) cu.referredBy = code; api.saveUser(cu); } document.getElementById('clRef').remove(); };
     document.getElementById('clRK').onclick = () => done('');
     document.getElementById('clRS').onclick = () => {

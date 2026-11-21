@@ -84,7 +84,7 @@ function viewQuiz() {
     <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Explore Tasks</small><b>Quiz Tasks</b></div><span style="width:40px"></span></div>
     <div class="demo-tag">DEMO: Quiz के Coins असली नहीं हैं। असली ऐप में जवाब की जाँच सर्वर पर होगी।</div>` +
     QUIZZES.map(q => { const d = tkDone(u, q.id); return `<div class="card" style="margin-bottom:10px"><div class="split"><div><b>${esc(q.title)}</b><br><small>${q.type} · ${q.qs.length} सवाल · पास: ${QUIZ_PASS}/${q.qs.length}</small></div><span class="bd ${d ? '' : 'pn'}">${d ? 'Reward Credited' : '+' + q.reward + ' Coins'}</span></div><button class="btn ${d ? 'soft' : 'primary'}" style="margin-top:10px" data-q="${q.id}" ${d ? 'disabled' : ''}>${d ? 'पूरा हो चुका ✓' : 'Start Task'}</button></div>`; }).join('') +
-    `<div class="hint">Brand Sponsored Quiz तभी आएँगे जब कोई असली Sponsor जुड़ेगा।</div></div>${navHTML('tasks')}`;
+    `</div>${navHTML('tasks')}`;
   bindNav(); $('back').onclick = () => go('home');
   document.querySelectorAll('[data-q]').forEach(b => b.onclick = () => qzStart(b.dataset.q));
 }
@@ -96,7 +96,7 @@ function qzScreen() {
     <div class="bar"><i style="width:${i / def.qs.length * 100}%"></i></div>
     <div class="card" style="margin-top:12px"><b style="font-size:16px">${esc(q.q)}</b>` +
     q.o.map((o, k) => `<button class="trow" style="margin-top:8px" data-o="${k}"><b>${String.fromCharCode(65 + k)}. ${esc(o)}</b></button>`).join('') +
-    `</div><div class="hint" style="margin-top:10px">बीच में छोड़ने पर टास्क "In Progress" रहेगा।</div></div>${navHTML('tasks')}`;
+    `</div></div>${navHTML('tasks')}`;
   bindNav(); $('back').onclick = () => { qzPlay = null; viewQuiz(); };
   document.querySelectorAll('[data-o]').forEach(b => b.onclick = () => qzAnswer(Number(b.dataset.o)));
 }
@@ -214,7 +214,7 @@ function viewTasks() {
     <div class="seg">${[['all', 'All'], ['explore', 'Explore'], ['offers', 'Offers']].map(([k, nme]) => `<button data-tf="${k}" class="${tkFilter === k ? 'on' : ''}">${nme}</button>`).join('')}</div>` +
     (list.length ? list.map(tkCard).join('') : `<div class="card" style="text-align:center"><b>${empty}</b><div class="hint">Home के Explore Tasks (Quiz या Reading) से नया टास्क शुरू करें।</div><button class="btn soft" id="goHome" style="margin-top:10px">Home पर जाएँ</button></div>`) +
     `<div class="split" style="margin-top:12px;gap:8px"><button class="btn soft" id="tHist">Task History</button><button class="btn soft" id="tRew">Reward History</button></div>
-    <div class="hint" style="margin-top:10px">CAPTCHA और Daily Mission यहाँ नहीं दिखते। CAPTCHA की History CAPTCHA पेज में है।</div></div>${navHTML('tasks')}`;
+    </div>${navHTML('tasks')}`;
   bindNav();
   document.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => { tkFilter = b.dataset.tf; viewTasks(); });
   document.querySelectorAll('[data-tk]').forEach(b => b.onclick = () => { const t = all.find(x => x.id === b.dataset.tk); if (t) tkDetail(t); });
@@ -228,7 +228,7 @@ function viewTasks() {
    Offer का Install/Use App सत्यापन (Offerwall/Advertiser), Screenshot की Admin मंज़ूरी और सारी सीमाएँ सर्वर (Firebase) पर होंगी।
    Diamond से जुड़ी खरीद के लिए Google Play Billing चाहिए। */
 const GM_LIMIT = 5, GM_ROUNDS = 3, GM_SHOW_MS = 2000, AD_SEC = 5;
-const GM_EMO = ['🍎', '🚗', '⭐', '🐶', '🎈', '🍕', '⚽', '🌸', '🎵', '🔔', '🐱', '🍩'];
+const GM_EMO = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10', 'g11', 'g12'];   // रंगीन आकार (icons.js में)
 const SO_OFFER = { id: 'so_demo1', name: 'Demo App Offer', fee: 28, steps: [
   { k: 'install', t: 'Install App', d: 'ऐप इंस्टॉल करें और कुछ मिनट चलाएँ।', c: 540 },
   { k: 'shot', t: 'Screenshot', d: 'ऐप में साइन-अप करें और Screenshot अपलोड करें।', c: 405, proof: true },
@@ -268,8 +268,8 @@ function viewGame() {
         <div class="hint">हर राउंड में एक निशान कुछ सेकंड दिखेगा। उसे याद रखें और फिर सही निशान चुनें। ${GM_ROUNDS} राउंड, पूरा होने पर 1 💎 (Ad देखने के बाद)।</div>
         <div class="hint">आज: ${n}/${GM_LIMIT} गेम</div>
         <button class="btn primary" id="gmGo" style="margin-top:12px" ${n >= GM_LIMIT ? 'disabled' : ''}>${n >= GM_LIMIT ? 'आज की सीमा पूरी' : 'Get Start'}</button></div>
-      <div class="sec" style="margin-top:16px"><h2>Task Partners</h2><div class="hint" style="margin:-4px 2px 10px">यहाँ Install करके खेलने और Coins कमाने के Partner Offers आएँगे।</div>
-      <div class="pgrid">${PLAY_PARTNERS.map((x, i) => `<div class="pcard"><small>Task Partner</small><div class="pav">${x.e}</div><b>${esc(x.n)}</b>${x.live ? '' : '<span class="bd pn" style="display:inline-block;margin-bottom:8px">जल्द आएगा</span>'}<button class="btn soft" data-pp="${i}">Get Now →</button></div>`).join('')}</div></div></div>${navHTML('home')}`;
+      ${PLAY_PARTNERS.some(x => x.live) ? `<div class="sec" style="margin-top:16px"><h2>Task Partners</h2>
+      <div class="pgrid">${PLAY_PARTNERS.map((x, i) => x.live ? `<div class="pcard"><small>Task Partner</small><div class="pav">${x.e}</div><b>${esc(x.n)}</b><button class="btn soft" data-pp="${i}">Get Now →</button></div>` : '').join('')}</div></div>` : ''}</div>${navHTML('home')}`;
     bindNav(); $('back').onclick = () => go('home');
     document.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => { const x = PLAY_PARTNERS[Number(b.dataset.pp)]; toast(x.live ? x.n + ' खुल रहा है…' : x.n + ' अभी जुड़ा नहीं है। Ad Network की मंज़ूरी के बाद खुलेगा।'); });
     $('gmGo').onclick = () => { gmPlay = { id: uid('G'), r: 0, ok: 0, step: 'show', done: false, credited: false }; gmRound(); };
@@ -287,12 +287,12 @@ function gmRound(again) {
   }
   if (g.step === 'show') {
     $('root').innerHTML = `<div class="page" style="padding-top:12px"><div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Match & Win</small><b>राउंड ${g.r + 1}/${GM_ROUNDS}</b></div>${diaChip(u)}</div>
-      <div class="card"><div class="hint" style="text-align:center">इस निशान को याद करें…</div><div class="gtarget">${g.target}</div></div></div>${navHTML('home')}`;
+      <div class="card"><div class="hint" style="text-align:center">इस निशान को याद करें…</div><div class="gtarget">${gmSym(g.target)}</div></div></div>${navHTML('home')}`;
     bindNav(); $('back').onclick = () => { gmPlay = null; go('home'); };
     gmTimer = setTimeout(() => { if (gmPlay === g) { g.step = 'pick'; gmRound(true); } }, GM_SHOW_MS);
   } else {
     $('root').innerHTML = `<div class="page" style="padding-top:12px"><div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Match & Win</small><b>राउंड ${g.r + 1}/${GM_ROUNDS}</b></div>${diaChip(u)}</div>
-      <div class="card"><b>कौन सा निशान दिखा था?</b><div class="duo" style="margin-top:12px">${g.opts.map(o => `<button class="gopt" data-pick="${o}">${o}</button>`).join('')}</div></div></div>${navHTML('home')}`;
+      <div class="card"><b>कौन सा निशान दिखा था?</b><div class="duo" style="margin-top:12px">${g.opts.map(o => `<button class="gopt" data-pick="${o}">${gmSym(o)}</button>`).join('')}</div></div></div>${navHTML('home')}`;
     bindNav(); $('back').onclick = () => { gmPlay = null; go('home'); };
     document.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
       if (b.dataset.pick === g.target) g.ok++;
@@ -389,19 +389,19 @@ function viewOffers() {
   let body = '';
   if (soOpen && act && act.id === soOpen) {
     const o = act;
-    body = `<div class="card" style="margin-bottom:10px"><b>${esc(o.name)}</b><div class="hint">Total Potential Earnings: <b>${total} Coins</b></div><div class="bar"><i style="width:${Math.round(o.steps.filter(s => soStepDone(s.st)).length / o.steps.length * 100)}%"></i></div></div><div class="sub" style="margin:4px 2px 8px">REWARDS</div>` +
+    body = `<div class="card" style="margin-bottom:10px"><b>${esc(o.name)}</b><div class="hint">Total Possible Rewards: <b>${total} Coins</b></div><div class="bar"><i style="width:${Math.round(o.steps.filter(s => soStepDone(s.st)).length / o.steps.length * 100)}%"></i></div></div><div class="sub" style="margin:4px 2px 8px">REWARDS</div>` +
       o.steps.map((s, i) => {
         const d = SO_OFFER.steps[i], ok = soStepDone(s.st), lock = i > 0 && !soStepDone(o.steps[i - 1].st), cur = !ok && !lock;
         return `<div class="stp ${ok ? 'ok' : lock ? 'lock' : ''}"><div class="split"><div><b>${d.t}</b><br><small>${d.d}</small></div><div style="text-align:right"><b style="color:var(--amber-d)">${d.c} Coins</b><br><span class="bd ${ok ? '' : 'pn'}">${ok ? s.st : lock ? 'Locked' : s.st}</span></div></div>` +
           (cur ? (d.proof ? (s.st === 'Pending Review' ? `<div class="hint">Screenshot जमा हो गया। Admin की मंज़ूरी का इंतज़ार (डेमो):</div><button class="btn soft" style="margin-top:8px" data-so="approve" data-k="${s.k}">Demo: Admin Approve</button>` : `<div class="hint">असली ऐप में यहाँ फ़ोटो अपलोड होगी।</div><button class="btn primary" style="margin-top:8px" data-so="step" data-k="${s.k}">Demo: Screenshot जमा करें</button>`) : `<button class="btn primary" style="margin-top:8px" data-so="step" data-k="${s.k}">Demo: चरण पूरा करें</button>`) : '') + '</div>';
-      }).join('') + `<div class="card" style="text-align:center;background:var(--amber);margin:12px 0"><small>Total Potential Earnings</small><br><b style="font-size:24px">${total} Coins</b></div><button class="btn soft" style="color:var(--danger)" id="soRemove">Remove Offer</button>`;
+      }).join('') + `<div class="card" style="text-align:center;background:var(--amber);margin:12px 0"><small>Total Possible Rewards</small><br><b style="font-size:24px">${total} Coins</b></div><button class="btn soft" style="color:var(--danger)" id="soRemove">Remove Offer</button>`;
   } else {
     body = `<div class="card"><div class="split"><div class="hi"><small>Offers Completed</small><b style="font-size:24px">🏅 ${doneN}</b></div><button class="pill ghost" id="soHist">View History</button></div></div>
       <div class="sec" style="margin-top:14px"><h2>Super Offers <span class="bd pn">NEW OFFER</span></h2>
       <div class="card"><div class="split"><div><b>${esc(SO_OFFER.name)}</b><br><small>🪙 ${total} Coins तक</small></div><span class="dchip">💎 ${SO_OFFER.fee} Fees</span></div>
       <button class="btn primary" id="soGo" style="margin-top:10px" ${was ? 'disabled' : ''}>${was ? 'Offer पूरा हो चुका ✓' : act ? 'Offer खोलें' : 'Complete Offer'}</button></div></div>` +
-      (act ? `<div class="sec"><h2>Pending Offers</h2><div class="card" style="background:var(--amber);color:var(--amber-d);font-size:12px;margin-bottom:10px">⚠ सभी टास्क पूरे होने तक ऐप को अनइंस्टॉल न करें।</div><button class="trow" id="soPend"><div style="flex:1"><b>${esc(act.name)}</b><small>शुरू: ${fdt(act.start)}</small><div class="bar" style="margin:6px 0"><i style="width:${Math.round(act.steps.filter(s => soStepDone(s.st)).length / act.steps.length * 100)}%"></i></div><small>Progress: ${act.steps.filter(s => soStepDone(s.st)).length}/${act.steps.length} tasks</small></div><span>›</span></button></div>` : '') +
-      `<div class="hint">असली Offers तभी आएँगे जब कोई असली Advertiser या Offerwall जुड़ेगा।</div>`;
+      (act ? `<div class="sec"><h2>Pending Offers</h2><button class="trow" id="soPend"><div style="flex:1"><b>${esc(act.name)}</b><small>शुरू: ${fdt(act.start)}</small><div class="bar" style="margin:6px 0"><i style="width:${Math.round(act.steps.filter(s => soStepDone(s.st)).length / act.steps.length * 100)}%"></i></div><small>Progress: ${act.steps.filter(s => soStepDone(s.st)).length}/${act.steps.length} tasks</small></div><span>›</span></button></div>` : '') +
+      ``;
   }
   $('root').innerHTML = `<div class="page" style="padding-top:12px"><div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>Super Offers</b></div>${diaChip(u)}</div>
     <div class="demo-tag">DEMO: Install, Use App और Screenshot की जाँच असली ऐप और Advertiser/Admin के बाद होगी। यहाँ बटन से चरण आगे बढ़ते हैं।</div>${body}</div>${navHTML('home')}`;
@@ -443,7 +443,7 @@ function viewMission() {
       else act = `<a class="msbtn open" href="${m.url}" target="_blank" rel="noopener" data-msopen="${m.id}">लिंक खोलें →</a><button class="msbtn claim" data-msclaim="${m.id}" disabled>मैंने कर लिया</button>`;
       return `<div class="card" style="margin-bottom:12px"><div class="split"><div style="display:flex;gap:12px;align-items:center"><div class="msico">${m.icon}</div><div><b>${esc(m.title)}</b><br><small>${esc(m.desc)}</small></div></div>${m.coins ? `<span class="bd ${done ? '' : 'pn'}">${done ? 'Done' : '+' + m.coins + ' Coins'}</span>` : ''}</div>${act}</div>`;
     }).join('') +
-    `<div class="hint">हर Reward एक अकाउंट को सिर्फ़ एक बार मिलता है। नए Mission बाद में Admin Panel से आएँगे।</div></div>${navHTML('home')}`;
+    `</div>${navHTML('home')}`;
   bindNav(); $('back').onclick = () => go('home');
   document.querySelectorAll('[data-msopen]').forEach(a => a.addEventListener('click', () => { msOpened[a.dataset.msopen] = Date.now(); msTick(); }));
   document.querySelectorAll('[data-msclaim]').forEach(b => b.onclick = () => msClaim(b.dataset.msclaim));
@@ -483,12 +483,14 @@ const MORE_EARN = [
   { e: '📍', t: 'Local Business Leads', m: 'Local Business Leads जल्द आएगा।' },
   { e: '📣', t: 'Sponsored Campaigns', m: 'Sponsored Campaigns जल्द आएगा।' },
   { e: '🏢', t: 'Business के लिए', m: 'Business पैनल असली लॉगिन (Firebase) बनने के बाद आएगा।' },
-  { e: '▶️', t: 'Watch & Earn', m: 'Watch & Earn Ad नेटवर्क जुड़ने पर आएगा।' },
+  { e: '▶️', t: 'Watch & Get Rewards', m: 'Watch & Get Rewards जल्द आएगा।' },
   { e: '📊', t: 'Daily Poll', m: 'Daily Poll जल्द आएगा।' }
 ];
 function moreEarnHTML() {
-  return `<div class="sec" style="margin-top:14px"><h2>और कमाने के तरीके</h2><div class="duo">` +
-    MORE_EARN.map((x, i) => `<button class="mcard" onclick="moreSoon(${i})"><div class="mico">${x.e}</div><b>${esc(x.t)}</b><span class="bd pn">जल्द आएगा</span></button>`).join('') + `</div></div>`;
+  const on = MORE_EARN.map((x, i) => [x, i]).filter(([x, i]) => typeof feat === 'function' && feat('more' + i));
+  if (!on.length) return '';
+  return `<div class="sec" style="margin-top:14px"><h2>रिवॉर्ड पाने के तरीके</h2><div class="duo">` +
+    on.map(([x, i]) => `<button class="mcard" onclick="moreSoon(${i})"><div class="mico">${x.e}</div><b>${esc(x.t)}</b><span class="bd pn">जल्द आएगा</span></button>`).join('') + `</div></div>`;
 }
 function moreSoon(i) { toast(MORE_EARN[i].m); }
 
@@ -497,7 +499,7 @@ function openCal() {
   let cells = '';
   for (let d = 1; d <= 365; d++) {
     const done = d <= u.streak; const today = !cs.claimedToday && d === cs.day;
-    cells += `<div class="cell ${done ? 'done' : ''} ${today ? 'today' : ''}"><b>${d}</b>${done ? '✓' : (d > cs.day || (cs.claimedToday && d > u.streak)) ? '🔒' : ''}<br>${rewardForDay(d)}c</div>`;
+    cells += `<div class="cell ${done ? 'done' : ''} ${today ? 'today' : ''}"><b>${d}</b>${done ? '✓' : (d > cs.day || (cs.claimedToday && d > u.streak)) ? '🔒' : ''}<br>${rewardForDay(d) + bonusForDay(d)}c</div>`;
   }
   $('sheet').innerHTML = `<h3>365 दिन का Check-in</h3><div class="sub">आगे के दिन Locked रहते हैं। दिन छूटने पर Streak Day 1 से शुरू (डेमो नियम)।</div>
     <div class="legend"><span>✓ Claimed</span><span>🔒 Locked</span></div><div class="cal">${cells}</div>

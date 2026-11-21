@@ -11,7 +11,7 @@ const PR_PLATFORMS = ['Instagram', 'WhatsApp Status', 'Facebook'];
 /* वीडियो बाद में यहाँ (या Admin Panel से) जुड़ेंगे। उदाहरण:
    { id: 'v1', title: 'ऐप का परिचय', url: 'videos/v1.mp4', caption: '' } */
 const PR_VIDEOS = [];
-const PR_CAPTION = 'Task Tandav से रोज़ कमाइए! मेरा Referral Code: {code} #ad #sponsored';
+const PR_CAPTION = 'Task Tandav से रोज़ रिवॉर्ड पाइए! मेरा Referral Code: {code} #ad #sponsored';
 
 const prFmt = n => Number(n).toLocaleString('en-IN');
 function prCoins(v) { for (const t of PR_TIERS) if (v >= t[0]) return t[1]; return 0; }
@@ -24,6 +24,7 @@ function prUser() {
 function prCaption(u, v) { return ((v && v.caption) || PR_CAPTION).replace('{code}', u.refCode); }
 
 function promoHomeHTML() {
+  if (typeof feat !== 'function' || !feat('promote')) return '';
   const t = PR_TIERS.slice().reverse().map(x => prFmt(x[0]) + '+ पर ' + x[1]).join(' · ');
   return `<div class="sec" style="margin-top:14px"><h2>📣 App Promote</h2><div class="card"><div style="display:flex;gap:12px;align-items:center"><div class="prico">🎬</div><div><b>वीडियो शेयर करें, Coins पाएँ</b><br><small>${t}</small></div></div><button class="btn primary" style="margin-top:12px" data-go="promote">खोलें →</button></div></div>`;
 }
@@ -48,7 +49,7 @@ function viewPromote() {
     PR_TIERS.slice().reverse().map(t => `<div class="split" style="padding:8px 0;border-bottom:1px solid var(--line);font-size:14px"><span>${prFmt(t[0])}+ Views</span><b>${t[1]} Coins</b></div>`).join('') +
     `<div class="hint">${prFmt(PR_MIN_VIEWS)} से कम Views पर Coins नहीं। एक वीडियो/लिंक पर एक ही बार। रोज़ ज़्यादा से ज़्यादा ${PR_DAY_MAX} पोस्ट।</div></div>
     <div class="exsub" style="margin-top:4px">🎬 वीडियो</div>` +
-    (vids || '<div class="card" style="margin-bottom:12px"><div class="hint" style="margin:0">वीडियो जल्द आएँगे।</div><button class="btn soft" id="prCapOnly" style="margin-top:10px">📋 कैप्शन (मेरा Referral Code के साथ) कॉपी करें</button></div>') +
+    (vids || '<div class="card" style="margin-bottom:12px"><button class="btn soft" id="prCapOnly">📋 कैप्शन (मेरा Referral Code के साथ) कॉपी करें</button></div>') +
     `<div class="exsub">📝 अपना पोस्ट जमा करें</div>
     <div class="card"><div class="field"><label>कहाँ पोस्ट किया</label><select id="prPf">${PR_PLATFORMS.map(p => `<option>${esc(p)}</option>`).join('')}</select></div>` +
     (PR_VIDEOS.length ? `<div class="field"><label>कौन सा वीडियो</label><select id="prVid">${PR_VIDEOS.map(v => `<option value="${esc(v.id)}">${esc(v.title)}</option>`).join('')}</select></div>` : '') +
@@ -58,7 +59,7 @@ function viewPromote() {
     <div class="err" id="prErr" style="color:var(--danger);font-size:12px;margin-bottom:8px"></div>
     <button class="btn primary" id="prGo" ${used >= PR_DAY_MAX ? 'disabled' : ''}>${used >= PR_DAY_MAX ? 'आज की सीमा पूरी (' + used + '/' + PR_DAY_MAX + ')' : 'जमा करें (' + used + '/' + PR_DAY_MAX + ' आज)'}</button></div>
     <div class="exsub">📋 मेरे जमा किए पोस्ट</div><div class="card">${hist}</div>
-    <div class="hint">पोस्ट में #ad या #sponsored ज़रूर रखें। कैप्शन में यह पहले से जुड़ा है।</div></div>${navHTML('home')}`;
+    <div class="hint">पोस्ट में #ad या #sponsored ज़रूर रखें (यह प्रचार है)। कैप्शन में यह पहले से जुड़ा है। Views का स्क्रीनशॉट ज़रूरी है और Coins सिर्फ़ Admin की मंज़ूरी के बाद मिलते हैं।</div></div>${navHTML('home')}`;
   bindNav(); $('back').onclick = () => go('home');
   if ($('prCapOnly')) $('prCapOnly').onclick = () => prCopy(prCaption(u));
   document.querySelectorAll('[data-prcap]').forEach(b => b.onclick = () => prCopy(prCaption(u, PR_VIDEOS[b.dataset.prcap])));

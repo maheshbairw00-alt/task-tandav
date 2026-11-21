@@ -80,27 +80,11 @@ function auLoadGis() {
 }
 
 /* Google का बटन बनाना (Terms टिक होने पर ही) */
-async function auNative() {
-  const err = $('gerr'); if (err) err.textContent = '';
-  if (AU_BUSY) return;
-  try {
-    const FA = window.Capacitor.Plugins.FirebaseAuthentication;
-    const res = await FA.signInWithGoogle({ skipNativeAuth: true });
-    const tok = res && res.credential && res.credential.idToken;
-    if (!tok) throw new Error('Google से टोकन नहीं मिला');
-    await auGotToken({ credential: tok });
-  } catch (e) { AU_BUSY = false; if (err) err.textContent = 'लॉगिन नहीं हुआ: ' + (e.message || e); }
-}
-
 async function auDraw() {
   const box = $('gbox'); if (!box) return;
   box.innerHTML = '';
   if (!$('gterms').checked) return;
   $('gerr').textContent = '';
-  if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
-    box.innerHTML = '<button class="btn" id="gnat" style="width:100%;max-width:300px;border-radius:999px">Google से जारी रखें</button>';
-    $('gnat').onclick = auNative; return;
-  }
   try {
     await auLoadGis();
     if (!$('gterms') || !$('gterms').checked) return;
