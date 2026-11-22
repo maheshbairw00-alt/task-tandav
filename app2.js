@@ -225,7 +225,7 @@ function viewTasks() {
 /* DEMO: Diamonds, गेम का नतीजा, Ad और Offer के चरण फ़ोन में ही जाँचे जाते हैं। असली ऐप में Diamonds, Ad देखने की पुष्टि (AdMob),
    Offer का Install/Use App सत्यापन (Offerwall/Advertiser), Screenshot की Admin मंज़ूरी और सारी सीमाएँ सर्वर (Firebase) पर होंगी।
    Diamond से जुड़ी खरीद के लिए Google Play Billing चाहिए। */
-const GM_LIMIT = 5, GM_ROUNDS = 3, GM_SHOW_MS = 2000, AD_SEC = 5;
+const GM_LIMIT = Infinity, GM_ROUNDS = 3, GM_SHOW_MS = 2000, AD_SEC = 5;
 const GM_EMO = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10', 'g11', 'g12'];   // रंगीन आकार (icons.js में)
 const SO_OFFER = { id: 'so_offer1', live: false, name: 'Offer', fee: 28, steps: [
   { k: 'install', t: 'Install App', d: 'ऐप इंस्टॉल करें और कुछ मिनट चलाएँ।', c: 540 },
@@ -262,8 +262,7 @@ function viewGame() {
     $('root').innerHTML = `<div class="page" style="padding-top:12px">
       <div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Play Game!</small><b>Match & Win</b></div>${diaChip(u)}</div>
       <div class="card" style="text-align:center"><div style="font-size:56px">🧩</div><b style="font-size:20px">Match & Win</b>
-        <div class="hint">हर राउंड में एक निशान कुछ सेकंड दिखेगा। उसे याद रखें और फिर सही निशान चुनें। ${GM_ROUNDS} राउंड, पूरा होने पर 1 💎 (Ad देखने के बाद)।</div>
-        <div class="hint">आज: ${n}/${GM_LIMIT} गेम</div>
+        <div class="hint">हर राउंड में एक निशान कुछ सेकंड दिखेगा। उसे याद रखें और फिर सही निशान चुनें।</div>
         <button class="btn primary" id="gmGo" style="margin-top:12px" ${n >= GM_LIMIT ? 'disabled' : ''}>${n >= GM_LIMIT ? 'आज की सीमा पूरी' : 'Get Start'}</button></div>
       <div class="sec" style="margin-top:16px"><h2>Task Partners</h2>
       <div class="pgrid">${PLAY_PARTNERS.map((x, i) => `<div class="pcard"><small>Task Partner</small><div class="pav">${x.e}</div><b>${esc(x.n)}</b><button class="btn soft" data-pp="${i}">Get Now →</button></div>`).join('')}</div></div></div>${navHTML('home')}`;
