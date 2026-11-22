@@ -300,7 +300,7 @@ function viewHome() {
   </div>
 
   <div class="sec"><div class="duo">
-    ${feat('superoffer') ? `<button class="dcard so" data-go="offers"><span class="tag">NEW</span><b>Super<br>Offer</b><small>🪙 2700+ Coins</small></button>` : ''}
+    ${feat('superoffer') ? `<button class="dcard so" data-go="offers"><span class="tag">NEW</span><b>Super<br>Offer</b><small>🪙 ${typeof SO_OFFER !== 'undefined' ? SO_OFFER.steps.reduce((x, y) => x + y.c, 0) : 900} Coins</small></button>` : ''}
     ${feat('game') ? `<button class="dcard pg" data-go="game"><span class="tag">💎 पाएँ</span><b>Play<br>Game!</b><small>खेलें और 💎 जीतें</small><span class="big">🎮</span></button>` : ''}
   </div></div>
 

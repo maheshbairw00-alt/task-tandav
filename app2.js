@@ -227,13 +227,13 @@ function viewTasks() {
    Diamond से जुड़ी खरीद के लिए Google Play Billing चाहिए। */
 const GM_LIMIT = Infinity, GM_ROUNDS = 3, GM_SHOW_MS = 2000, AD_SEC = 5;
 const GM_EMO = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10', 'g11', 'g12'];   // रंगीन आकार (icons.js में)
-const SO_OFFER = { id: 'so_offer1', live: false, name: 'Offer', fee: 28, steps: [
-  { k: 'install', t: 'Install App', d: 'ऐप इंस्टॉल करें और कुछ मिनट चलाएँ।', c: 540 },
-  { k: 'shot', t: 'Screenshot', d: 'ऐप में साइन-अप करें और Screenshot अपलोड करें।', c: 405, proof: true },
-  { k: 'use1', t: 'Use App', d: 'ऐप 5 मिनट और चलाएँ।', c: 472 },
-  { k: 'use2', t: 'Use App', d: 'ऐप 5 मिनट और चलाएँ।', c: 472 },
-  { k: 'use3', t: 'Use App', d: 'ऐप 5 मिनट और चलाएँ।', c: 811 }] };
-let gmPlay = null, gmTimer = null, soOpen = null;
+const SO_OFFER = { id: 'so_offer1', live: false, name: 'Offer 1', fee: 28, link: '', steps: [
+  { k: 'install', t: 'Install the app', d: 'Download and install the app from the link.', c: 50 },
+  { k: 'shot', t: 'Register & send screenshot', d: 'Create your account, then upload a screenshot.', c: 100, proof: true },
+  { k: 'use1', t: 'Use the app for 5 minutes', d: 'Opens 4 hours after the last task.', c: 150, wait: 4, use: true },
+  { k: 'use2', t: 'Use the app for 5 minutes', d: 'Opens 7 hours after the last task.', c: 250, wait: 7, use: true },
+  { k: 'use3', t: 'Use the app for 5 minutes', d: 'Opens 48 hours after the last task. Then claim your coins.', c: 350, wait: 48, use: true }] };
+let gmPlay = null, gmTimer = null, soOpen = null, soTick = null;
 /* Task Partners: अभी सिर्फ़ बटन। हर Partner तभी चालू करें जब उसके साथ असली मंज़ूरी/Agreement हो जाए।
    live: true करने पर "Get Now" उसका असली पेज (SDK/Offerwall) खोलेगा, वह कोड तब जोड़ा जाएगा। */
 const PLAY_PARTNERS = [
@@ -359,9 +359,10 @@ function soDoStep(oid, k, approve) {
   const u = diaUser(), o = u.offers.find(x => x.id === oid); if (!o || o.status !== 'In Progress') return;
   const i = o.steps.findIndex(s => s.k === k), s = o.steps[i], def = SO_OFFER.steps[i];
   if (!s || soStepDone(s.st) || (i > 0 && !soStepDone(o.steps[i - 1].st))) return;
+  if (def.wait && i > 0) { const pv = o.steps[i - 1].at; if (pv && Date.now() < new Date(pv).getTime() + def.wait * 3600000) return; }
   if (def.proof && !approve) { if (s.st !== 'Pending Review') { s.st = 'Pending Review'; api.saveUser(u); viewOffers(); } return; }
   if (def.proof && s.st !== 'Pending Review') return;
-  const now = new Date().toISOString(); s.st = def.proof ? 'Approved' : 'Completed'; s.tx = uid('TXN');
+  const now = new Date().toISOString(); s.st = def.proof ? 'Approved' : 'Completed'; s.tx = uid('TXN'); s.at = now;
   u.coins += def.c; u.earned += def.c; u.ledger.unshift({ id: s.tx, type: 'Offer Reward', coins: def.c, at: now, ref: o.id });
   if (o.steps.every(x => soStepDone(x.st))) { o.status = 'Completed'; o.end = now; toast('🎉 Offer पूरा हुआ!'); }
   soSync(u, o); api.saveUser(u); viewOffers();
@@ -384,13 +385,19 @@ function viewOffers() {
   const total = SO_OFFER.steps.reduce((a, s) => a + s.c, 0);
   let body = '';
   if (soOpen && act && act.id === soOpen) {
-    const o = act;
-    body = `<div class="card" style="margin-bottom:10px"><b>${esc(o.name)}</b><div class="hint">Total Possible Rewards: <b>${total} Coins</b></div><div class="bar"><i style="width:${Math.round(o.steps.filter(s => soStepDone(s.st)).length / o.steps.length * 100)}%"></i></div></div><div class="sub" style="margin:4px 2px 8px">REWARDS</div>` +
+    const o = act, nDone = o.steps.filter(x => soStepDone(x.st)).length;
+    body = `<div class="so-h">${nDone}/${o.steps.length} tasks done</div><div class="so-s">Finish all ${o.steps.length} tasks to get your coins.</div>` +
       o.steps.map((s, i) => {
-        const d = SO_OFFER.steps[i], ok = soStepDone(s.st), lock = i > 0 && !soStepDone(o.steps[i - 1].st), cur = !ok && !lock;
-        return `<div class="stp ${ok ? 'ok' : lock ? 'lock' : ''}"><div class="split"><div><b>${d.t}</b><br><small>${d.d}</small></div><div style="text-align:right"><b style="color:var(--amber-d)">${d.c} Coins</b><br><span class="bd ${ok ? '' : 'pn'}">${ok ? s.st : lock ? 'Locked' : s.st}</span></div></div>` +
-          (cur ? (d.proof ? (s.st === 'Pending Review' ? `<div class="hint">Screenshot जमा हो गया। Admin की मंज़ूरी का इंतज़ार:</div><button class="btn soft" style="margin-top:8px" data-so="approve" data-k="${s.k}">Demo: Admin Approve</button>` : `<div class="hint">असली ऐप में यहाँ फ़ोटो अपलोड होगी।</div><button class="btn primary" style="margin-top:8px" data-so="step" data-k="${s.k}">Demo: Screenshot जमा करें</button>`) : `<button class="btn primary" style="margin-top:8px" data-so="step" data-k="${s.k}">Demo: चरण पूरा करें</button>`) : '') + '</div>';
-      }).join('') + `<div class="card" style="text-align:center;background:var(--amber);margin:12px 0"><small>Total Possible Rewards</small><br><b style="font-size:24px">${total} Coins</b></div><button class="btn soft" style="color:var(--danger)" id="soRemove">Remove Offer</button>`;
+        const d = SO_OFFER.steps[i], ok = soStepDone(s.st), prevOk = i === 0 || soStepDone(o.steps[i - 1].st);
+        const opensAt = (d.wait && i > 0 && o.steps[i - 1].at) ? new Date(o.steps[i - 1].at).getTime() + d.wait * 3600000 : 0, waiting = prevOk && !ok && opensAt > Date.now();
+        let st = '';
+        if (ok) st = '<div class="so-st">Completed</div>';
+        else if (!prevOk) st = '<div class="so-st lk">Complete the previous task first</div>';
+        else if (waiting) st = `<div class="so-st" data-open="${opensAt}">Opens in …</div>`;
+        else if (d.proof) st = s.st === 'Pending Review' ? '<div class="so-st">Screenshot sent. Waiting for approval.</div>' : '<button class="btn primary so-b" data-sofile="' + s.k + '">Upload screenshot</button><input type="file" accept="image/*" hidden id="sof_' + s.k + '">';
+        else { const need = d.use ? 300000 : 15000; st = s.started ? (Date.now() >= s.started + need ? `<button class="btn primary so-b" data-so="step" data-k="${s.k}">Complete</button>` : `<div class="so-st" data-use="${s.started + need}">${d.use ? 'Keep using the app…' : 'Checking…'}</div>`) : `<button class="btn primary so-b" data-sostart="${s.k}">${!d.use && SO_OFFER.link ? 'Open link' : 'Start'}</button>`; }
+        return `<div class="so-card ${ok ? 'ok' : prevOk && !waiting ? 'cur' : 'lock'}"><div class="so-n">${i + 1}</div><div class="so-x"><b>${d.t}</b><small>${d.d}</small>${st}</div></div>`;
+      }).join('') + `<button class="btn soft" style="color:var(--danger);margin-top:8px" id="soRemove">Remove Offer</button>`;
   } else {
     body = `<div class="card"><div class="split"><div class="hi"><small>Offers Completed</small><b style="font-size:24px">🏅 ${doneN}</b></div><button class="pill ghost" id="soHist">View History</button></div></div>
       <div class="sec" style="margin-top:14px"><h2>Super Offers <span class="bd pn">NEW OFFER</span></h2>
@@ -399,13 +406,28 @@ function viewOffers() {
       (act ? `<div class="sec"><h2>Pending Offers</h2><button class="trow" id="soPend"><div style="flex:1"><b>${esc(act.name)}</b><small>शुरू: ${fdt(act.start)}</small><div class="bar" style="margin:6px 0"><i style="width:${Math.round(act.steps.filter(s => soStepDone(s.st)).length / act.steps.length * 100)}%"></i></div><small>Progress: ${act.steps.filter(s => soStepDone(s.st)).length}/${act.steps.length} tasks</small></div><span>›</span></button></div>` : '') +
       ``;
   }
-  $('root').innerHTML = `<div class="page" style="padding-top:12px"><div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>Super Offers</b></div>${diaChip(u)}</div>${body}</div>${navHTML('home')}`;
+  $('root').innerHTML = `<div class="page" style="padding-top:12px"><div class="top"><button class="ic" id="back">←</button><div class="hi"><small>Task Tandav</small><b>${soOpen && act && act.id === soOpen ? esc(act.name) : 'Super Offers'}</b></div>${diaChip(u)}</div>${body}</div>${navHTML('home')}`;
   bindNav(); $('back').onclick = () => { if (soOpen) { soOpen = null; viewOffers(); } else go('home'); };
   if ($('soHist')) $('soHist').onclick = soHistory;
   if ($('soGo')) $('soGo').onclick = () => { if (soActive(u)) { soOpen = soActive(u).id; viewOffers(); } else soStart(); };
   if ($('soPend')) $('soPend').onclick = () => { soOpen = act.id; viewOffers(); };
   if ($('soRemove')) $('soRemove').onclick = () => soRemove(act.id);
   document.querySelectorAll('[data-so]').forEach(b => b.onclick = () => soDoStep(act.id, b.dataset.k, b.dataset.so === 'approve'));
+  document.querySelectorAll('[data-sostart]').forEach(b => b.onclick = () => {
+    const o = act, st = o.steps.find(x => x.k === b.dataset.sostart), df = SO_OFFER.steps.find(x => x.k === b.dataset.sostart); if (!st) return;
+    if (!df.use && SO_OFFER.link) window.open(SO_OFFER.link, '_blank');
+    st.started = Date.now(); api.saveUser(u); viewOffers();
+  });
+  document.querySelectorAll('[data-sofile]').forEach(b => { const inp = $('sof_' + b.dataset.sofile); b.onclick = () => inp.click();
+    inp.onchange = () => { if (!inp.files || !inp.files[0]) return; const st = act.steps.find(x => x.k === b.dataset.sofile); st.st = 'Pending Review'; api.saveUser(u); viewOffers(); }; });
+  if (soTick) clearInterval(soTick);
+  if (document.querySelector('[data-open],[data-use]')) soTick = setInterval(() => {
+    if (!$('root') || !document.querySelector('[data-open],[data-use]')) return clearInterval(soTick);
+    let redo = false;
+    document.querySelectorAll('[data-open]').forEach(e => { const l = Number(e.dataset.open) - Date.now(); if (l <= 0) redo = true; else e.textContent = 'Opens in ' + Math.floor(l / 3600000) + 'h ' + Math.floor(l % 3600000 / 60000) + 'm ' + Math.floor(l % 60000 / 1000) + 's'; });
+    document.querySelectorAll('[data-use]').forEach(e => { if (Number(e.dataset.use) - Date.now() <= 0) redo = true; });
+    if (redo) { clearInterval(soTick); viewOffers(); }
+  }, 1000);
 }
 
 /* ---------- DAILY MISSION: YouTube + Telegram बॉट ---------- */
@@ -504,3 +526,19 @@ function closeModal() { $('modal').classList.add('hidden'); }
 $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
 
 route();
+
+
+/* ---------- Quiz और Reading में पेज बदलने पर Ad (Admin से चालू/बंद: ad_page) ---------- */
+let adLastKey = null;
+function pageAd(key) {
+  const changed = adLastKey !== null && adLastKey !== key;
+  adLastKey = key;
+  if (changed && feat('ad_page') && window.TTAds && window.TTAds.available()) window.TTAds.showInterstitial();
+}
+(function () {
+  const q1 = qzScreen, r1 = rdScreen, vq = viewQuiz, vr = viewReading;
+  qzScreen = function () { q1.apply(this, arguments); pageAd(qzPlay ? (qzPlay.result ? 'q-result' : 'q' + qzPlay.i) : 'q-list'); };
+  rdScreen = function () { r1.apply(this, arguments); pageAd(rdPlay ? (rdPlay.result ? 'r-result' : 'r-' + rdPlay.step) : 'r-list'); };
+  viewQuiz = function () { vq.apply(this, arguments); if (!qzPlay) pageAd('q-list'); };
+  viewReading = function () { vr.apply(this, arguments); if (!rdPlay) pageAd('r-list'); };
+})();
