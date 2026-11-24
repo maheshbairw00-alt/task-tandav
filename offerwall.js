@@ -35,3 +35,22 @@ async function owClaim() {
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(owClaim, 1200); });
 setTimeout(owClaim, 5000); setInterval(owClaim, 60000);
+
+/* ---------- Welcome Bonus: ₹4 (400 Coins), पहली बार लॉगिन पर, हर खाते को एक बार (Worker से पक्का) ---------- */
+let wbBusy = false;
+async function owWelcome() {
+  if (!OW_API || wbBusy) return; wbBusy = true;
+  try {
+    const fu = firebase.auth().currentUser, u = api.currentUser(); if (!fu || !u || u.welcomeDone) return;
+    const tk = await fu.getIdToken();
+    const r = await fetch(OW_API + '/welcome', { method: 'POST', headers: { Authorization: 'Bearer ' + tk } }); if (!r.ok) return;
+    const j = await r.json();
+    if (j.granted && !u.ledger.some(l => l.ref === 'welcome')) {
+      const c = Math.floor(Number(j.coins)) || 0;
+      if (c > 0) { u.coins += c; u.earned += c; u.ledger.unshift({ id: uid('TXN'), type: 'Welcome Bonus', coins: c, at: new Date().toISOString(), ref: 'welcome' }); toast('🎁 Welcome Bonus: ' + c + ' Coins (₹' + (c / 100) + ') मिले!'); }
+    }
+    u.welcomeDone = true; api.saveUser(u);
+    if (j.granted && typeof route === 'function') route();
+  } catch (e) { console.warn('owWelcome', e); } finally { wbBusy = false; }
+}
+setTimeout(owWelcome, 4000); setInterval(owWelcome, 45000);
