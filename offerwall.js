@@ -13,7 +13,7 @@ function viewOfferwall() {
 }
 
 /* ---------- Offerwall के coins: Cloudflare Worker से लेना ---------- */
-const OW_API = '';   // Worker का पता, जैसे 'https://tt-coins.आपका-नाम.workers.dev' (नीचे के निर्देश के बाद यहाँ डालें)
+const OW_API = 'https://tt-coins.maheshbairw00.workers.dev';
 let owBusy = false;
 async function owClaim() {
   if (!OW_API || owBusy) return; owBusy = true;
