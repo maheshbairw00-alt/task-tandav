@@ -11,3 +11,27 @@ function viewOfferwall() {
     </div>${navHTML('home')}`;
   bindNav(); $('back').onclick = () => go('home');
 }
+
+/* ---------- Offerwall के coins: Cloudflare Worker से लेना ---------- */
+const OW_API = '';   // Worker का पता, जैसे 'https://tt-coins.आपका-नाम.workers.dev' (नीचे के निर्देश के बाद यहाँ डालें)
+let owBusy = false;
+async function owClaim() {
+  if (!OW_API || owBusy) return; owBusy = true;
+  try {
+    const fu = firebase.auth().currentUser, u = api.currentUser(); if (!fu || !u) return;
+    const tk = await fu.getIdToken();
+    const r = await fetch(OW_API + '/pending', { headers: { Authorization: 'Bearer ' + tk } }); if (!r.ok) return;
+    const items = (await r.json()).items || []; if (!items.length) return;
+    const done = [], now = new Date().toISOString(); let add = 0;
+    items.forEach(it => {
+      const ref = 'pubscale:' + it.token;
+      if (!u.ledger.some(l => l.ref === ref)) { const c = Math.floor(Number(it.value)); if (c > 0) { u.coins += c; u.earned += c; add += c; u.ledger.unshift({ id: uid('TXN'), type: 'Offerwall Reward', coins: c, at: now, ref }); } }
+      done.push(it.token);
+    });
+    if (add) { api.saveUser(u); toast('🎉 Offerwall से ' + add + ' Coins मिले'); }
+    await fetch(OW_API + '/ack', { method: 'POST', headers: { Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json' }, body: JSON.stringify({ tokens: done }) });
+    if (add && typeof route === 'function') route();
+  } catch (e) { console.warn('owClaim', e); } finally { owBusy = false; }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(owClaim, 1200); });
+setTimeout(owClaim, 5000); setInterval(owClaim, 60000);
