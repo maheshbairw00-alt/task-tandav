@@ -318,10 +318,17 @@ function gmWatchAd() {
   const g = gmPlay;
   /* Android ऐप में असली (अभी टेस्ट) Rewarded Ad; वेब पर पुराना डेमो */
   if (window.TTAds && window.TTAds.available()) {
-    const btn = $('gmAd'); if (btn) { btn.disabled = true; btn.textContent = 'Ad लोड हो रहा है…'; }
-    window.TTAds.showRewarded().then((ok) => {
-      if (ok) gmCredit(g); else { toast('Ad पूरा नहीं हुआ, 💎 नहीं मिला'); if (btn) { btn.disabled = false; btn.textContent = '▶ Watch Ad'; } }
-    });
+    const btn = $('gmAd'); if (btn) btn.disabled = true;
+    (async () => {
+      const N = 3;   // एक बार में लगातार 3 Ad (1/3, 2/3, 3/3)
+      for (let i = 1; i <= N; i++) {
+        if (btn) btn.textContent = 'Ad ' + i + '/' + N + ' लोड हो रहा है…';
+        toast('Ad ' + i + '/' + N);
+        const ok = await window.TTAds.showRewarded();
+        if (!ok) { toast('Ad पूरा नहीं हुआ, 💎 नहीं मिला'); if (btn) { btn.disabled = false; btn.textContent = '▶ Watch Ad'; } return; }
+      }
+      gmCredit(g);
+    })();
     return;
   }
   let left = AD_SEC;
@@ -395,7 +402,7 @@ function viewOffers() {
         else if (!prevOk) st = '<div class="so-st lk">Complete the previous task first</div>';
         else if (waiting) st = `<div class="so-st" data-open="${opensAt}">Opens in …</div>`;
         else if (d.proof) st = s.st === 'Pending Review' ? '<div class="so-st">Screenshot sent. Waiting for approval.</div>' : '<button class="btn primary so-b" data-sofile="' + s.k + '">Upload screenshot</button><input type="file" accept="image/*" hidden id="sof_' + s.k + '">';
-        else { const need = d.use ? 300000 : 15000; st = s.started ? (Date.now() >= s.started + need ? `<button class="btn primary so-b" data-so="step" data-k="${s.k}">Complete</button>` : `<div class="so-st" data-use="${s.started + need}">${d.use ? 'Keep using the app…' : 'Checking…'}</div>`) : `<button class="btn primary so-b" data-sostart="${s.k}">${!d.use && SO_OFFER.link ? 'Open link' : 'Start'}</button>`; }
+        else { const need = d.use ? 300000 : 15000; st = s.started ? (Date.now() >= s.started + need ? `<button class="btn primary so-b" data-so="step" data-k="${s.k}">Complete</button>` : `<div class="so-st" data-use="${s.started + need}">${d.use ? 'Keep using the app…' : 'Checking…'}</div>`) : `<button class="btn primary so-b" data-sostart="${s.k}">${i === 0 && window.TTAds && window.TTAds.available() ? '▶ Watch Ad & Download' : !d.use && SO_OFFER.link ? 'Open link' : 'Start'}</button>`; }
         return `<div class="so-card ${ok ? 'ok' : prevOk && !waiting ? 'cur' : 'lock'}"><div class="so-n">${i + 1}</div><div class="so-x"><b>${d.t}</b><small>${d.d}</small>${st}</div></div>`;
       }).join('') + `<button class="btn soft" style="color:var(--danger);margin-top:8px" id="soRemove">Remove Offer</button>`;
   } else {
@@ -415,8 +422,21 @@ function viewOffers() {
   document.querySelectorAll('[data-so]').forEach(b => b.onclick = () => soDoStep(act.id, b.dataset.k, b.dataset.so === 'approve'));
   document.querySelectorAll('[data-sostart]').forEach(b => b.onclick = () => {
     const o = act, st = o.steps.find(x => x.k === b.dataset.sostart), df = SO_OFFER.steps.find(x => x.k === b.dataset.sostart); if (!st) return;
-    if (!df.use && SO_OFFER.link) window.open(SO_OFFER.link, '_blank');
-    st.started = Date.now(); api.saveUser(u); viewOffers();
+    const go = () => { if (!df.use && SO_OFFER.link) window.open(SO_OFFER.link, '_blank'); st.started = Date.now(); api.saveUser(u); viewOffers(); };
+    /* पहला चरण (Download): पहले Ad चलेगा, Ad पूरा देखने के बाद ही Download लिंक खुलेगा */
+    if (o.steps[0] === st && window.TTAds && window.TTAds.available()) {
+      b.disabled = true;
+      (async () => {
+        const N = 3;   // लगातार 3 Ad (1/3, 2/3, 3/3)
+        for (let i = 1; i <= N; i++) {
+          b.textContent = 'Ad ' + i + '/' + N + ' लोड हो रहा है…'; toast('Ad ' + i + '/' + N);
+          if (!(await window.TTAds.showRewarded())) { toast('Ad पूरा नहीं हुआ। दोबारा कोशिश करें।'); b.disabled = false; b.textContent = '▶ Watch Ad & Download'; return; }
+        }
+        go();
+      })();
+      return;
+    }
+    go();
   });
   document.querySelectorAll('[data-sofile]').forEach(b => { const inp = $('sof_' + b.dataset.sofile); b.onclick = () => inp.click();
     inp.onchange = () => { if (!inp.files || !inp.files[0]) return; const st = act.steps.find(x => x.k === b.dataset.sofile); st.st = 'Pending Review'; api.saveUser(u); viewOffers(); }; });
@@ -529,11 +549,14 @@ route();
 
 
 /* ---------- Quiz और Reading में पेज बदलने पर Ad (Admin से चालू/बंद: ad_page) ---------- */
-let adLastKey = null;
+let adLastKey = null, adCount = 0;
+const AD_EVERY = 1;   // हर पेज बदलने पर Ad
 function pageAd(key) {
   const changed = adLastKey !== null && adLastKey !== key;
   adLastKey = key;
-  if (changed && feat('ad_page') && window.TTAds && window.TTAds.available()) window.TTAds.showInterstitial();
+  if (!changed || !feat('ad_page')) return;
+  adCount++;
+  if (adCount % AD_EVERY === 0 && window.TTAds && window.TTAds.available()) window.TTAds.showInterstitial();
 }
 (function () {
   const q1 = qzScreen, r1 = rdScreen, vq = viewQuiz, vr = viewReading;
