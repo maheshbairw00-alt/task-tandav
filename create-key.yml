@@ -1,0 +1,34 @@
+name: 1 - Create upload key (एक बार)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  key:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Create upload keystore
+        env:
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KS_PASS" ]; then echo "KEYSTORE_PASSWORD secret नहीं मिला। पहले GitHub Settings में Secret बनाइए।"; exit 1; fi
+          if [ ${#KS_PASS} -lt 12 ]; then echo "पासवर्ड कम से कम 12 अक्षर का रखिए।"; exit 1; fi
+          if [ -f upload-keystore.p12 ]; then echo "upload-keystore.p12 पहले से मौजूद है। दोबारा नहीं बनाया।"; else
+            keytool -genkeypair -storetype PKCS12 -keystore upload-keystore.p12 -alias tasktandav -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Task Tandav, O=Task Tandav, C=IN"
+            git config user.name "github-actions"
+            git config user.email "actions@users.noreply.github.com"
+            git add upload-keystore.p12
+            git commit -m "Add upload keystore (password-protected)"
+            git push
+          fi
+          echo "=== इन्हें Firebase में जोड़ना है ==="
+          keytool -list -v -keystore upload-keystore.p12 -storepass "$KS_PASS" -alias tasktandav | grep -E "SHA1|SHA256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: upload-keystore-BACKUP
+          path: upload-keystore.p12
