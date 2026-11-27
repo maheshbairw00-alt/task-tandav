@@ -264,8 +264,8 @@ function viewGame() {
       <div class="card" style="text-align:center"><div style="font-size:56px">🧩</div><b style="font-size:20px">Match & Win</b>
         <div class="hint">हर राउंड में एक निशान कुछ सेकंड दिखेगा। उसे याद रखें और फिर सही निशान चुनें।</div>
         <button class="btn primary" id="gmGo" style="margin-top:12px" ${n >= GM_LIMIT ? 'disabled' : ''}>${n >= GM_LIMIT ? 'आज की सीमा पूरी' : 'Get Start'}</button></div>
-      <div class="sec" style="margin-top:16px"><h2>Task Partners</h2>
-      <div class="pgrid">${PLAY_PARTNERS.map((x, i) => `<div class="pcard"><small>Task Partner</small><div class="pav">${x.e}</div><b>${esc(x.n)}</b><button class="btn soft" data-pp="${i}">Get Now →</button></div>`).join('')}</div></div></div>${navHTML('home')}`;
+      <div class="sec" style="margin-top:16px" ${PLAY_PARTNERS.some((x, i) => feat('pp' + i)) ? '' : 'hidden'}><h2>Task Partners</h2>
+      <div class="pgrid">${PLAY_PARTNERS.map((x, i) => !feat('pp' + i) ? '' : `<div class="pcard"><small>Task Partner</small><div class="pav">${x.e}</div><b>${esc(x.n)}</b><button class="btn soft" data-pp="${i}">Get Now →</button></div>`).join('')}</div></div></div>${navHTML('home')}`;
     bindNav(); $('back').onclick = () => go('home');
     document.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => { const x = PLAY_PARTNERS[Number(b.dataset.pp)]; toast(x.live ? x.n + ' खुल रहा है…' : 'अभी उपलब्ध नहीं है।'); });
     $('gmGo').onclick = () => { gmPlay = { id: uid('G'), r: 0, ok: 0, step: 'show', done: false, credited: false }; gmRound(); };
